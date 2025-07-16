@@ -43,7 +43,7 @@ this repository for security purposes, So code will not build properly when usin
 This [issues list](https://github.com/kobraworksmodding/SR2IssuesList/issues) is a good lead on SR2-specific issues to attempt to fix.
 * Contributions are very much welcome for the game and for any Juiced bugs, and we are willing to help with any issues/contributions if you open an issue/PR.
 * Netcode is out-of-scope, if there's a feature you want to implement that uses networking contact us.
-* This repository's issues is not meant for technical support.
+* Both repository's issues are not meant for technical support.
 
 ## Special Thanks
 - [Scanti](https://github.com/scanti2) - Extra help with Juiced Patch + Created Monkey Patch
