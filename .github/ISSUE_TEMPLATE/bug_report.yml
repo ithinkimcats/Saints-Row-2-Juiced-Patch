@@ -1,0 +1,58 @@
+name: Bug, crash or freeze/hang
+description: Choose this if something doesn't work and no other template applies.
+body:
+
+  - type: textarea
+    id: reproduction
+    validations:
+      required: true
+    attributes:
+      label: What area of the game
+      placeholder: |
+        When I finish the last activity level, the game crashes.
+
+        Here's a screenshot of the place and its placement on the map:
+        [upload screenshots]
+
+        Here's my savedata before the crashing mission:
+        [upload zip of savedata]
+      description: >
+        Try to explain so someone else could do the same thing.  Upload savedata if possible to make it easier to reproduce.
+
+  - type: textarea
+    id: desired
+    validations:
+      required: true
+    attributes:
+      label: What should happen
+      placeholder: |
+        The mission should be passing without crashing.
+      description: >
+        If it's a crash, just say "It shouldn't crash."  For more complex bugs, it helps to explain what should happen as it's not always obvious.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: CrashDumps and logs
+      placeholder: '[drag files here...]'
+      description: |
+        Juiced generates crash minidumps and logs file, they are located in the game's directory/Juiced/CrashDumps, send both corresponding .log and .dmp file by archiving it, it'd also be preferred to include the corresponding log from \Juiced\logs
+        
+  - type: input
+    id: workingversion
+    attributes:
+      label: Last working version
+      placeholder: v7.8.5
+      description: >
+        If it worked before, it's usually easier to narrow down a fix.
+
+  - type: checkboxes
+    attributes:
+      label: Checklist
+      options:
+        - label: "Confirmed this bug only occurs with a non-modified installation Saints Row 2 and Juiced with no other mods installed such as GOTR or Overhauled Stilwater"
+          required: true
+        - label: "[Search for other reports](https://github.com/kobraworksmodding/Saints-Row-2-Juiced-Patch/issues) of the same issue."
+          required: true
+        - label: "Include logs or screenshots of issue."
+          required: true
