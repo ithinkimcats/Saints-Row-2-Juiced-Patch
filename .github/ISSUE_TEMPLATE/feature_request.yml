@@ -1,0 +1,20 @@
+name: New feature or behavior change
+description: "Choose when something isn't broken, but you want it to be better."
+body:
+  - type: textarea
+    id: desired
+    validations:
+      required: true
+    attributes:
+      label: What should happen
+      placeholder: |
+        Juiced Patch should have a keybind that gives me free FPS.
+      description: >
+        Be specific and descriptive.
+
+  - type: checkboxes
+    attributes:
+      label: Checklist
+      options:
+        - label: "[Searched for other requests](https://github.com/kobraworksmodding/Saints-Row-2-Juiced-Patch/issues) of the same feature."
+          required: true
