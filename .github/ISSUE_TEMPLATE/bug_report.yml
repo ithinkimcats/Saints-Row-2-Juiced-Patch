@@ -50,9 +50,9 @@ body:
     attributes:
       label: Checklist
       options:
-        - label: "Confirmed this bug only occurs with a non-modified installation Saints Row 2 and Juiced with no other mods installed such as GOTR or Overhauled Stilwater"
+        - label: "Confirmed this bug only occurs with a non-modified installation of Saints Row 2 & Juiced Patch with no other mods installed such as GOTR or Overhauled Stilwater"
           required: true
-        - label: "[Search for other reports](https://github.com/kobraworksmodding/Saints-Row-2-Juiced-Patch/issues) of the same issue."
+        - label: "Search for other reports](https://github.com/kobraworksmodding/Saints-Row-2-Juiced-Patch/issues) of the same issue."
           required: true
         - label: "Include logs or screenshots of issue."
           required: true
