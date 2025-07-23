@@ -253,10 +253,11 @@ namespace Render3D
 		patchNop((BYTE*)0x005226F3, 8); // Bye bye sleep call.
 	}
 
-	void FasterLoadingScreens()
+	void FasterLoading()
 	{
 		Logger::TypedLog(CHN_MOD, "Making loading screens slightly faster.\n");
-		patchBytesM((BYTE*)0x0068C714, (BYTE*)"\x6A\x0F", 2); // this is a sleep call for first load/legal disclaimers, its set to 30 by default, halfing increases fps to 60 and makes loading faster.
+		patchBytesM((BYTE*)0x0068C714, (BYTE*)"\x6A\x0F", 2);
+		patchBytesM((BYTE*)0x00A72FD2, (BYTE*)"\x90\x90", 2); // this is a sleep call for first load/legal disclaimers, its set to 30 by default, halfing increases fps to 60 and makes loading faster.
 	}
 	volatile float Brightness = 1.32f;
 	volatile float Saturation = 0.8f;
@@ -888,9 +889,9 @@ namespace Render3D
 			Render3D::HookSleep();
 		}
 
-		if (GameConfig::GetValue("Debug", "FasterLoadingScreens", 1))
+		if (GameConfig::GetValue("Gameplay", "FasterLoading", 1))
 		{
-			Render3D::FasterLoadingScreens();
+			Render3D::FasterLoading();
 		}
 	}
 }
