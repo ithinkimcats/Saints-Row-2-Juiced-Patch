@@ -335,6 +335,7 @@ namespace Math
 	extern void Init();
 	namespace Fixes {
 		extern SafetyHookMid matrix_operator_multiplication_midhook;
+		extern signed char SSE_hack;
 	}
 	inline bool isVectorNull(vector3& vec) {
 		return vec.isNull();

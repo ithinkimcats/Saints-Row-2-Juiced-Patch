@@ -393,6 +393,8 @@ namespace BlingMenuInstall
            load_weapons_xtbl("weapons.xtbl", 1);
            });
        //BlingMenuAddBool("Juiced Debug", "simulate a add_to_entry crash(only works when below handler is hooked)", &Render3D::crash, NULL);
+       if((GameConfig::GetValue("Debug", "FastMath", 1) == 255))
+       BlingMenuAddInt8("Juiced Debug", "FastMath", &Math::Fixes::SSE_hack, NULL,1,0,2);
        BlingMenuAddFuncCustom("Juiced Debug", "Hook a (eh) exception-ish handler to stop add_to_entry crash", NULL, &BM_ClippyTextureExceptionHandle, NULL);
        BlingMenuAddFuncCustom("Juiced Debug", "Hook / make add_to_entry(bitmap_entry *be,peg_entry *pe) to just use pe as both args", NULL, &BM_TervelCrashWorkAround, NULL);
        BlingMenuAddBool("Juiced Debug", "UseDynamicRenderDistance", (bool*)&Debug::UseDynamicRenderDistance, NULL);

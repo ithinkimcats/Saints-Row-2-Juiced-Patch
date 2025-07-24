@@ -56,7 +56,107 @@ namespace Math
 
 	namespace Fixes {
 		SafetyHookMid matrix_operator_multiplication_midhook{};
+		SafetyHookInline sub_9EE620{};
+		signed char SSE_hack = 1;
+		DWORD* _stdcall sub_9EE620_sse4(DWORD* a1, float a2, float a3, float a4, float a5)
+		{
+			__m128 v5;
+			__m128 v6;
+			__m128 v7;
+			__m128i v8;
+			__m128i v9;
+			__m128i v10;
+			DWORD* result;
+			unsigned int v12;
+
+			v5 = _mm_set_ps(a5, a4, a3, a2);
+
+
+			v6 = _mm_set1_ps(1.0f);
+			v5 = _mm_add_ps(v5, v6);
+
+			v7 = _mm_set1_ps(127.5f);
+			v5 = _mm_mul_ps(v5, v7);
+
+
+			v8 = _mm_cvtps_epi32(v5);
+
+
+			v9 = _mm_packus_epi32(v8, v8);
+
+
+			v10 = _mm_packus_epi16(v9, v9);
+
+
+			v12 = _mm_extract_epi32(v10, 0);
+
+			result = a1;
+			*a1 = v12;
+
+			return result;
+		}
+		DWORD* _stdcall sub_9EE620_sse2(DWORD* a1, float a2, float a3, float a4, float a5)
+		{
+			__m128 v5;
+			__m128 v6;
+			__m128 v7;
+			__m128i v8;
+			DWORD* result;
+			union {
+				__m128i vec;
+				unsigned int arr[4];
+			} v10;
+
+			v5 = _mm_set_ps(a5, a4, a3, a2);
+
+			v6 = _mm_set1_ps(1.0f);
+			v5 = _mm_add_ps(v5, v6);
+
+
+			v7 = _mm_set1_ps(127.5f);
+			v5 = _mm_mul_ps(v5, v7);
+
+			v8 = _mm_cvtps_epi32(v5);
+
+			v10.vec = v8;
+
+			result = a1;
+
+			*a1 = (v10.arr[0] & 0xFF) |
+				((v10.arr[1] & 0xFF) << 8) |
+				((v10.arr[2] & 0xFF) << 16) |
+				((v10.arr[3] & 0xFF) << 24);
+
+			return result;
+		}
+		DWORD* _stdcall sub_9EE620_dbg(DWORD* a1, float a2, float a3, float a4, float a5) {
+			switch (SSE_hack) {
+			case 0:
+				return sub_9EE620.stdcall<DWORD*>(a1, a2, a3, a4, a5);
+				break;
+			case 1:
+				return sub_9EE620_sse2(a1, a2, a3, a4, a5);
+				break;
+			case 2:
+				return sub_9EE620_sse4(a1, a2, a3, a4, a5);
+				break;
+			default:
+				return sub_9EE620_sse2(a1, a2, a3, a4, a5);
+				break;
+			}
+		}
 		void Init() {
+			int cpuinfo[4]{};
+			__cpuid(cpuinfo, 1);
+			bool sse1 = cpuinfo[3] & (1 << 25) || false;
+			bool sse2 = cpuinfo[3] & (1 << 26) || false;
+			bool sse3 = cpuinfo[2] & (1 << 0) || false;
+			bool ssse3 = cpuinfo[2] & (1 << 9) || false;
+			bool sse4_1 = cpuinfo[2] & (1 << 19) || false;
+			bool sse4_2 = cpuinfo[2] & (1 << 20) || false;
+
+			bool allowMathFix = sse2 && GameConfig::GetValue("Debug", "FastMath", 1);
+			bool allowMathFixdbg = sse2 && (GameConfig::GetValue("Debug", "FastMath", 1) == 255);
 			// Idea to fix issue #14 IK/Foot issue getting messed up, the actual call cause is at 0x0x00CE9600, but rn im doing this globally as it makes the most sense - Clippy95
 			matrix_operator_multiplication_midhook = safetyhook::create_mid(0x00BE2F57, [](SafetyHookContext& ctx) {
 				matrix* result = (matrix*)ctx.eax;
@@ -67,6 +167,21 @@ namespace Math
 
 				ctx.eip = 0x00BE313F;
 				});
+			if (!allowMathFix)
+				return;
+			if (!allowMathFixdbg) {
+				if (sse2 && !sse4_1)
+					sub_9EE620 = safetyhook::create_inline(0x9EE620, &sub_9EE620_sse2);
+				else if (sse4_1) {
+					sub_9EE620 = safetyhook::create_inline(0x9EE620, &sub_9EE620_sse4);
+					SSE_hack = 2;
+				}
+			}
+			else {
+				sub_9EE620 = safetyhook::create_inline(0x9EE620, &sub_9EE620_dbg);
+				if(sse4_1)
+					SSE_hack = 2;
+			}
 		}
 	}
 	void Init() {
