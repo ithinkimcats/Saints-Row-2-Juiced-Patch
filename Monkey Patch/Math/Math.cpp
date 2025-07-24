@@ -145,6 +145,30 @@ namespace Math
 				break;
 			}
 		}
+
+		int sub_BDB4F0_SSE4(unsigned char* a1, float* a2, float* a3) {
+			__m128i bytes = _mm_loadu_si32(a1);
+			__m128i int_vec = _mm_cvtepu8_epi32(bytes);
+			__m128 float_vec = _mm_cvtepi32_ps(int_vec);
+
+			const __m128 scale = _mm_set1_ps(2.0f / 255.0f);
+			__m128 result_vec = _mm_mul_ps(float_vec, scale);
+			result_vec = _mm_sub_ps(result_vec, _mm_set1_ps(1.0f));
+
+			_mm_store_ss(a2, result_vec);
+
+			__m128 shuffled = _mm_shuffle_ps(result_vec, result_vec, _MM_SHUFFLE(1, 1, 1, 1));
+			_mm_store_ss(a2 + 1, shuffled);
+
+			shuffled = _mm_shuffle_ps(result_vec, result_vec, _MM_SHUFFLE(2, 2, 2, 2));
+			_mm_store_ss(a2 + 2, shuffled);
+
+			shuffled = _mm_shuffle_ps(result_vec, result_vec, _MM_SHUFFLE(3, 3, 3, 3));
+			_mm_store_ss(a3, shuffled);
+
+			return a1[3];
+		}
+
 		void Init() {
 			int cpuinfo[4]{};
 			__cpuid(cpuinfo, 1);
@@ -155,8 +179,8 @@ namespace Math
 			bool sse4_1 = cpuinfo[2] & (1 << 19) || false;
 			bool sse4_2 = cpuinfo[2] & (1 << 20) || false;
 
-			bool allowMathFix = sse2 && GameConfig::GetValue("Debug", "FastMath", 1);
-			bool allowMathFixdbg = sse2 && (GameConfig::GetValue("Debug", "FastMath", 1) == 255);
+			bool allowMathFix = (sse2 || sse4_1) && GameConfig::GetValue("Debug", "FastMath", 1);
+			bool allowMathFixdbg = (sse2 || sse4_1) && (GameConfig::GetValue("Debug", "FastMath", 1) == 255);
 			// Idea to fix issue #14 IK/Foot issue getting messed up, the actual call cause is at 0x0x00CE9600, but rn im doing this globally as it makes the most sense - Clippy95
 			matrix_operator_multiplication_midhook = safetyhook::create_mid(0x00BE2F57, [](SafetyHookContext& ctx) {
 				matrix* result = (matrix*)ctx.eax;
@@ -181,6 +205,17 @@ namespace Math
 				sub_9EE620 = safetyhook::create_inline(0x9EE620, &sub_9EE620_dbg);
 				if(sse4_1)
 					SSE_hack = 2;
+			}
+			if (sse4_1) {
+				auto static sub_BDB4F0_hook = safetyhook::create_mid(0x00BDB4F1, [](SafetyHookContext& ctx) {
+					if (SSE_hack == 0)
+						return;
+					unsigned char* a1 = (unsigned char*)ctx.eax;
+					float* a2 = (float*)ctx.ecx;
+					float* a3 = (float*)(ctx.esp + 8);
+					sub_BDB4F0_SSE4(a1, a2, a3);
+					ctx.eip = 0x00BDB54E;
+					});
 			}
 		}
 	}
