@@ -1,4 +1,4 @@
-#include "../FileLogger.h"
+﻿#include "../FileLogger.h"
 #include "../Patcher/patch.h"
 #include "../SafeWrite.h"
 #include "../GameConfig.h"
@@ -281,7 +281,17 @@ namespace Game
 			}
 			});
 	}
+	void force_metric_measurements() {
+		SafeWrite8(0x6B1783, 0xEB);
+		SafeWrite8(0x605820, 0xEB);
+		SafeWrite8(0x619550, 0xEB);
+		SafeWrite8(0x64B685, 0xEB);
+	}
+
+	CPatch streaming_sleep_call = CPatch::PatchNop(0xA72FD0, 4);
+
 	void Init() { 
+		force_metric_measurements();
 		chat_box_cursor_support_hooks();
 		FixFrametimeVehicleSkids = safetyhook::create_mid(0xA9DDB3, [](SafetyHookContext& ctx) {
 			using namespace Timer;
