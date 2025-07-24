@@ -288,9 +288,8 @@ namespace Game
 		SafeWrite8(0x64B685, 0xEB);
 	}
 
-	CPatch streaming_sleep_call = CPatch::PatchNop(0xA72FD0, 4);
-
 	void Init() { 
+		if(GameConfig::GetValue("Gameplay","ForceMetricSystem",0))
 		force_metric_measurements();
 		chat_box_cursor_support_hooks();
 		FixFrametimeVehicleSkids = safetyhook::create_mid(0xA9DDB3, [](SafetyHookContext& ctx) {
