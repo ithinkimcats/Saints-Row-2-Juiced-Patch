@@ -810,6 +810,10 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
             case 0x0051CE07:
                 wcscat_s(errorPopup,L"Details:\nFailed to Direct3DDevice9->CreateTexture as Direct3DDevice9 is NULL, most likely due to a non standard VESA display.\n\n Most commonly caused by native portrait displays (eg. Steam Deck running Windows), delete settings.dat and restart the game if you previously attempted to start the game without Juiced and creating a settings.dat.");
                 break;
+            case 0x004818D5:
+                wcscat_s(errorPopup, L"Details:\nUseFixedXACT doesn't work on your system because XAudio2.3 isn't installed. This feature has been skipped and turned off in the .ini file. Please install DirectX End-User Runtimes to use this feature.");
+                GameConfig::SetValue("Audio", "UseFixedXACT", 0);
+                break;
             }
             wcscat_s(errorPopup, L"Please send this logging file located at:\n\n");
             wcscat_s(errorPopup, filename);
