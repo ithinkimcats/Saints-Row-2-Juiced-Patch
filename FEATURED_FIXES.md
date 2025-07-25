@@ -7,9 +7,11 @@ Fixes marked with ⚙️ can be configured/toggled via the INI file / BlingMenu
 ## Critical fixes
 
 * ⚙️ FPS boost by at least 2x[^1] via SleepHack (3 options via **SleepHack**)
-* ⚙️ Fix Havok Frametime which casued objects,cutscenes,camera math and more to be incorrect/desync. 
+* ⚙️ Fix Havok Frametime which casued objects,cutscenes,camera math and more to be incorrect/desync.
+* ⚙️ Use modern math functions which in turn makes cutscenes and any scenes with water faster via FastMath, boosts FPS by at most 2x[^1] in such scenes
 * ⚙️ Correct Gamma to be more inline with the Xbox 360 version.
-* ⚙️ Use XACT 2.3 which in turn fixes several audio playback issues, aside from 3D panning
+* ⚙️ Use XAudio 2.3 which in turn fixes several audio playback issues, aside from 3D panning
+* Fixed several game crashes.
 * Fixed over 35 broken shaders.
 * Automatically LAA patch SR2's exe, (including Steam)
 * Fix semi-common texture crash that was caused in "add_to_entry"
@@ -31,6 +33,7 @@ Fixes marked with ⚙️ can be configured/toggled via the INI file / BlingMenu
 
 ## Enhancements
 * Allow loading of loose files (VPP content) with folders to load from taken from loose.txt (default mods folder)
+* ⚙️ addon_bitmaps - allows for custom textures support, meaning you can load new texture entries with new names.
 * ⚙️ Ported over 30 animations from the console versions.
 * ⚙️ Implemented Dynamic controller prompts
 * ⚙️ Restore Slew Mode, toggleable via F4 or BlingMenu
@@ -51,4 +54,4 @@ Fixes marked with ⚙️ can be configured/toggled via the INI file / BlingMenu
 * ⚙️ TauntCancelling
 * ⚙️ UseWeaponAfterEmpty - Keep your empty weapon equipped after you've run out of ammo for that weapon
 * ⚙️ RemoveVignette (off by default)
-* ⚙️ FasterLoadingScreens
+* ⚙️ FasterLoading - Reduces Stuttering and also make loading screens fasters.
