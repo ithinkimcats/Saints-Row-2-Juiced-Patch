@@ -56,7 +56,7 @@ inline bool isPaused;
 #if JLITE
 inline const char* juicedversion = "1.5.1";
 #else
-inline const char* juicedversion = "7.8.5";
+inline const char* juicedversion = "7.9.0";
 #endif
 
 inline const char* thaRowmenuversion = "0.0.1";
