@@ -496,6 +496,10 @@ namespace Input {
 	volatile char KEY_inventory_left = 'A';
 	volatile char KEY_inventory_right = 'D';
 	void Init() {
+		KEY_inventory_up = GameConfig::GetChar("Input", "KEY_inventory_up", KEY_inventory_up);
+		KEY_inventory_down = GameConfig::GetChar("Input", "KEY_inventory_down", KEY_inventory_down);
+		KEY_inventory_left = GameConfig::GetChar("Input", "KEY_inventory_left", KEY_inventory_left);
+		KEY_inventory_right = GameConfig::GetChar("Input", "KEY_inventory_right", KEY_inventory_right);
 		if (GameConfig::GetValue("Input", "better_inventory_keyboard", 1)) {
 			static auto properInventory_keyboard = safetyhook::create_mid(0xB997F3, [](SafetyHookContext& ctx) {
 				if (!ctx.ebx || *is_controller_connect) // shouldn't allow this to work while a controller is connected, vanilla game bug but having a controller connected + using WASD will move the weapon wheel as if it's LS. -- Clippy95

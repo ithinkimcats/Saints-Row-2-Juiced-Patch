@@ -33,6 +33,7 @@ namespace InGameConfig {
     { "Audio", "UseFixedXACT" },
     {"Graphics","RemovePixelationShader"},
     {"Gameplay","FasterLoading"},
+    {"Gameplay","ForceMetricSystem"},
     };
     static PatchEntry patch_registry[] = {
 #if !JLITE

@@ -116,6 +116,18 @@ namespace GameConfig
 		return def;
 	}
 
+	char GetChar(const char* appName, const char* keyName, char def)
+	{
+		char buffer[2] = { 0 };
+		GetPrivateProfileStringA(appName, keyName, "", buffer, sizeof(buffer), inipath);
+
+		if (buffer[0] != '\0') {
+			return buffer[0];
+		}
+
+		return def;
+	}
+
 	//---------------------------------
 	// Set a string value from the INI
 	//---------------------------------
