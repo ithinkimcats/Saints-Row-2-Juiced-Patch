@@ -193,24 +193,29 @@ namespace Math
 				});
 			if (!allowMathFix)
 				return;
-			if (!allowMathFixdbg) {
-				if (sse2 && !sse4_1) {
-					//sub_9EE620 = safetyhook::create_inline(0x9EE620, &sub_9EE620_sse2);
-					Logger::TypedLog("MATH", "Patching several math functions for better performance: SSE%d\n", 2);
-					patchJmp((void*)0x9EE620, &sub_9EE620_sse2);
-				}
-				else if (sse4_1) {
-					//sub_9EE620 = safetyhook::create_inline(0x9EE620, &sub_9EE620_sse4);
-				patchJmp((void*)0x9EE620, &sub_9EE620_sse4);
-				Logger::TypedLog("MATH", "Patching several math functions for better performance: SSE%d\n", 4);
-					SSE_hack = 2;
-				}
-			}
-			else {
+			SSE_hack = 1;
+			//if (allowMathFix) {
+			//	if (sse2 && !sse4_1) {
+			//		sub_9EE620 = safetyhook::create_inline(0x9EE620, &sub_9EE620_sse2);
+			//		Logger::TypedLog("MATH", "Patching several math functions for better performance: SSE%d\n", 2);
+			//		//patchJmp((void*)0x9EE620, &sub_9EE620_sse2);
+			//	}
+			//	else if (sse4_1) {
+			//		sub_9EE620 = safetyhook::create_inline(0x9EE620, &sub_9EE620_sse4);
+			//	//patchJmp((void*)0x9EE620, &sub_9EE620_sse4);
+			//	Logger::TypedLog("MATH", "Patching several math functions for better performance: SSE%d\n", 4);
+			//		SSE_hack = 2;
+			//	}
+			//}
+			//else {
+			
+			// Okay for some reason the dbg switch case function is faster than letting it route to the SSE2/SSE4 functions?? -- Clippy95
 				sub_9EE620 = safetyhook::create_inline(0x9EE620, &sub_9EE620_dbg);
-				if(sse4_1)
+				if (sse4_1)
 					SSE_hack = 2;
-			}
+				else if (sse2)
+					SSE_hack = 1;
+				Logger::TypedLog("MATH", "Patching several math functions for better performance: SSE%d\n", 4);
 			if (sse4_1) {
 				auto static sub_BDB4F0_hook = safetyhook::create_mid(0x00BDB4F1, [](SafetyHookContext& ctx) {
 					if (SSE_hack == 0)
