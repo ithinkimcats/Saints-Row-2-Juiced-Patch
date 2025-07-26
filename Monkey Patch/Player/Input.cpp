@@ -554,6 +554,11 @@ namespace Input {
 		DisableXInput();
 		ForceNoVibration();
 
+		if (GameConfig::GetValue("Gameplay", "DisableDInput", 1))
+		{
+			patchByte((void*)0xC147D4, 0xC); // jnz 0xC147E1
+		}
+
 		if (GameConfig::GetValue("Gameplay", "TagHook", 1))
 		{
 			patchDWord((void*)0xDF77FC, (uint32_t)&subT_6218F0);
