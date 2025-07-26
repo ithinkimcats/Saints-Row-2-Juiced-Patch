@@ -32,7 +32,7 @@ namespace InGameConfig {
 #endif
     { "Audio", "UseFixedXACT" },
     {"Graphics","RemovePixelationShader"},
-    {"Gameplay","FasterLoading"},
+    {"Debug","FasterLoading"},   
     {"Gameplay","ForceMetricSystem"},
     };
     static PatchEntry patch_registry[] = {

@@ -889,7 +889,7 @@ namespace Render3D
 			Render3D::HookSleep();
 		}
 
-		if (GameConfig::GetValue("Gameplay", "FasterLoading", 1))
+		if (GameConfig::GetValue("Debug", "FasterLoading", 1))
 		{
 			Render3D::FasterLoading();
 		}
