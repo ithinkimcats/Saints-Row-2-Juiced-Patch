@@ -51,6 +51,9 @@ namespace InGameConfig {
     {"DisableFog",&Render3D::CMPatches_DisableFog,nullptr,"Graphics","DisableFog"},
     {"SR1Reloading",&Behavior::CMPatches_SR1Reloading,nullptr,"Gameplay","SR1Reloading"},
     {"SR1QuickSwitch",&Behavior::CMPatches_SR1QuickSwitch,nullptr,"Gameplay","SR1QuickSwitch"},
+    {"NoMeleeLockOn",&Behavior::CMPatches_NoMeleeLockOn,nullptr,"Gameplay","NoMeleeLockOn"},
+    {"DisableDistantPeds",nullptr, &Game::DisableDistantPeds, "Debug","DisableDistantPeds"},
+    {"DisableDistantVehicles",nullptr, &Game::DisableDistantVehicles, "Debug","DisableDistantVehicles"},
     {"BetterAnimBlend",nullptr,&Behavior::CAnimBlend,"Gameplay","BetterAnimBlend"},
     {"UseWeaponAfterEmpty",&Behavior::CMPatches_UseWeaponAfterEmpty,nullptr,"Gameplay","Keep Weapon After Empty"},
     {"TauntCancelling",&Behavior::CMPatches_UseWeaponAfterEmpty,nullptr,"Gameplay","TauntCancelling"},
@@ -112,7 +115,9 @@ namespace InGameConfig {
         InGameConfig::RegisterBoolSlider("SR1QuickSwitch", "SR1QuickSwitch", InGameConfig::MenuType::CONTROLS);
         InGameConfig::RegisterBoolSlider("SR1CrouchCam", "SR1CrouchCam", InGameConfig::MenuType::CONTROLS);
         InGameConfig::RegisterBoolSlider("AllowWeaponSwitchInAllCases", "AllowWeaponSwitchInAllCases", InGameConfig::MenuType::CONTROLS);
-        //InGameConfig::RegisterSlider("BetterAO", "Better Ambient Occlusion", {"FUCK OFF ", "fucked off"}, 50);
+        InGameConfig::RegisterBoolSlider("NoMeleeLockOn", "NoMeleeLockOn", InGameConfig::MenuType::CONTROLS);
+        InGameConfig::RegisterBoolSlider("DisableDistantPeds", "DisableDistantPeds");
+        InGameConfig::RegisterBoolSlider("DisableDistantVehicles", "DisableDistantVehicles");
 #endif
 #if !JLITE
         InGameConfig::RegisterBoolSlider("BetterAnimBlend", "Better Anim Blend");

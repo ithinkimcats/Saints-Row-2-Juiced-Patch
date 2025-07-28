@@ -18,6 +18,7 @@ namespace Behavior
 	extern CMultiPatch CMPatches_TauntCancelling;
 	extern SafetyHookMid cf_do_control_mode_sticky_MIDASMHOOK;
 	extern CPatch CAllowWeaponSwitchInAllCases_KBM;
+	extern CMultiPatch CMPatches_NoMeleeLockOn;
 	extern float vehicle_camera_follow_modifier;
 	extern void LessCameraVehicleFollow_hook_enable_disable();
 }

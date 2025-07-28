@@ -41,6 +41,34 @@ namespace Behavior
 		patchNop((BYTE*)0x00E92388, 3); // StandToWalk
 	}
 	
+	int FindMeleeTarget(int NPCPointer) {
+		return ((int(__cdecl*)(int))0x974FB0)(NPCPointer);
+	}
+
+	bool IsNPCDead(int NPCPointer) {
+		return ((bool(__fastcall*)(int))0x9855F0)(NPCPointer);
+	}
+
+	int __cdecl DisableMeleeLockon1(int NPCPointer) {
+		if (NPCPointer == UtilsGlobal::getplayer()) return 0;
+		else return FindMeleeTarget(NPCPointer);
+	}
+
+	bool __declspec(naked) DisableMeleeLockon2() {
+		static int Continue = 0x00974D06;
+		int NPCPointer;
+		__asm {
+			mov NPCPointer, eax
+		}
+		if (NPCPointer != UtilsGlobal::getplayer(true)) {
+			__asm {
+				mov ecx, 0x973360
+				call ecx
+			}
+		}
+		__asm jmp Continue
+	}
+
 	void MovingAttacks() {
 		patchBytesM((BYTE*)0x00981EE5, (BYTE*)"\xEB\x10", 2);
 		patchJmp((void*)0x981F40, UtilsGlobal::RetZero);
@@ -88,6 +116,16 @@ CMultiPatch CMPatches_SR1Reloading = {
 				mp.AddPatchNop(0x00797003, 5);
 			},
 	};
+
+	CMultiPatch CMPatches_NoMeleeLockOn = {
+
+			[](CMultiPatch& mp) {
+				mp.AddWriteRelCall(0x0097C7BC, (uintptr_t)&DisableMeleeLockon1);
+				mp.AddWriteRelCall(0x0097F29F, (uintptr_t)&DisableMeleeLockon1);
+				mp.AddWriteRelJump(0x00974D01, (uintptr_t)&DisableMeleeLockon2);
+			},
+	};
+
 	CPatch CSR1CrouchCam = CPatch::PatchNop(0x0049B718, 2);
 	void SR1QuickSwitch()
 	{
@@ -350,6 +388,12 @@ CMultiPatch CMPatches_SR1Reloading = {
 		{
 			SR1Reloading();
 		}
+
+		if (GameConfig::GetValue("Gameplay", "NoMeleeLockOn", 0))
+		{
+			CMPatches_NoMeleeLockOn.Apply();	
+		}
+
 		if (GameConfig::GetValue("Gameplay", "SR1CrouchCam",1)) {
 			Logger::TypedLog(CHN_DEBUG, "Patching SR1CrouchCam...\n");
 			CSR1CrouchCam.Apply();

@@ -12,6 +12,8 @@
 #pragma warning( disable : 28159)
 namespace Game
 {
+	CPatch DisableDistantPeds = CPatch::SafeWrite8(0xB7D980, 0xC3);
+	CPatch DisableDistantVehicles = CPatch::SafeWrite8(0xB80B60, 0xC3);
 	namespace Timer {
 		// Returns game's frametime in ms
 		float GetFrameTime() {
@@ -288,7 +290,9 @@ namespace Game
 		SafeWrite8(0x64B685, 0xEB);
 	}
 
-	void Init() { 
+	void Init() {
+		if (GameConfig::GetValue("Debug", "DisableDistantPeds", 0)) DisableDistantPeds.Apply();
+		if (GameConfig::GetValue("Debug", "DisableDistantVehicles", 0)) DisableDistantVehicles.Apply();
 		if(GameConfig::GetValue("Gameplay","ForceMetricSystem",0))
 		force_metric_measurements();
 		chat_box_cursor_support_hooks();

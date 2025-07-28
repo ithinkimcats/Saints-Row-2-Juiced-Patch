@@ -82,5 +82,7 @@ namespace Game
 	};
 	extern XTBLScanStatus xtbl_scan_status;
 	extern int s_CursorPosition;
+	extern CPatch DisableDistantPeds;
+	extern CPatch DisableDistantVehicles;
 };
 
