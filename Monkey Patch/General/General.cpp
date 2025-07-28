@@ -879,50 +879,6 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 			jmp jmp_continue
 		}
 	}
-
-	static float X_divisor = 30.f;
-	// Not a proper fix but final outcome should look like this lol, ideally find out why vehicles fuck up the sens when reading
-	void WorkAroundHorizontalMouseSensitivity() {
-		BYTE PlayerStatus = *(BYTE*)0x00E9A5BC;
-		enum status {
-			vehicle = 3,
-			boat = 5,
-			helicopter = 6,
-			plane = 8,
-		};
-		switch (PlayerStatus) {
-		case vehicle:
-		case boat:
-		case helicopter:
-		case plane:
-			X_divisor = 10.f;
-			break;
-		default:
-			X_divisor = 30.f;
-			break;
-		}
-
-
-	}
-	void __declspec(naked) WorkAroundHorizontalMouseSensitivityASMHelper() {
-		static int jmp_continue = 0x00C13720;
-
-		__asm {
-			pushad
-			pushfd
-		}
-		__asm {
-			call WorkAroundHorizontalMouseSensitivity
-		}
-		__asm {
-			popfd
-			popad
-			fdiv ds : X_divisor
-			jmp jmp_continue
-		}
-
-	}
-	CPatch CFixHorizontalMouseSensitivity = CPatch::WriteRelJump(0x00C1371A, (uintptr_t)&WorkAroundHorizontalMouseSensitivityASMHelper);
 	void __declspec(naked) StoreNPCPointer()
 	{
 		static int jmp_continue = 0x0098E498;
@@ -1245,9 +1201,10 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 		WriteRelJump(0x007737DA, (UInt32)&MSAA); // 8x MSAA support; requires modded pause_menu.lua but won't cause issues without
 		WriteRelJump(0x0075C8D0, (UInt32)&ValidCharFix); // add check for control keys to avoid pasting issues in the executor
 		WriteRelJump(0x00C1F4ED, (UInt32)&MouseFix); // fix ghost mouse scroll inputs when tabbing in and out
-		if (GameConfig::GetValue("Gameplay", "FixHorizontalMouseSensitivity", 1)) {
-			//WriteRelJump(0x00C1371A, (UInt32)&WorkAroundHorizontalMouseSensitivityASMHelper); // attempt to fix Horizontal sens being 3x faster compared to vertical while on foot
-			CFixHorizontalMouseSensitivity.Apply();
+		if (GameConfig::GetValue("Input", "FixVerticalMouseSensitivity", 1)) {
+
+			patchBytesM((BYTE*)0x00498331, (BYTE*)"\xD9\xE8\x90", 3); // fld1 nop
+			
 		}
 		WriteRelJump(0x0098E493, (UInt32)&StoreNPCPointer);
 		WriteRelJump(0x0098EE0B, (UInt32)&SpawningCheck);

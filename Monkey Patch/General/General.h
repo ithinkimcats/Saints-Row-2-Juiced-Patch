@@ -22,7 +22,6 @@ namespace General {
 	void NPCSpawner(const char* Name);
 	void YeetAllNPCs();
 	bool IsSRFocused();
-	extern CPatch CFixHorizontalMouseSensitivity;
 	extern bool DeletionMode;
 	extern bool* EnterPressed;
 	extern bool IsQuickSaving;
