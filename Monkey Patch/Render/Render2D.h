@@ -40,5 +40,13 @@ namespace Render2D
 		float unk1;
 		float unk2;
 	};
+
+	struct BINK {
+		uint32_t Width;
+		uint32_t Height;
+		uint32_t Frames;
+		uint32_t FrameNum;
+	};
+
 	extern SafetyHookMid final_2d_render;
 }

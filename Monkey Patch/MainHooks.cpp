@@ -1520,13 +1520,13 @@ int* sub_73D900() {
 			L"This message is only to spread awareness, make a GOTR.txt file in your game directory to remove this message."
 			L"\n-Juiced Team");
 	}
-	else if (Game::xtbl_scan_status.overhauled_stilwater_detected()) {
-		ModWarningMessage("overhauled_stilwater.txt",L"Overhauled Stilwater", L"does not increase stability or fix the game, in some cases it can even do the opposite.\n"
-			L"Crashes and issues that may occur are usually NOT the cause of Juiced Patch.\n"
-			L"Think of GOTR as a DLC mod rather than a fix patch.\n"
-			L"This message is only to spread awareness, make a GOTR.txt file in your game directory to remove this message."
-			L"\n-Juiced Team");
-	}
+	//else if (Game::xtbl_scan_status.overhauled_stilwater_detected()) {
+	//	ModWarningMessage("overhauled_stilwater.txt",L"Overhauled Stilwater", L"does not increase stability or fix the game, in some cases it can even do the opposite.\n"
+	//		L"Crashes and issues that may occur are usually NOT the cause of Juiced Patch.\n"
+	//		L"Think of GOTR as a DLC mod rather than a fix patch.\n"
+	//		L"This message is only to spread awareness, make a GOTR.txt file in your game directory to remove this message."
+	//		L"\n-Juiced Team");
+	//}
 
 #endif
 	return ((int* (*)())0x73D900)();

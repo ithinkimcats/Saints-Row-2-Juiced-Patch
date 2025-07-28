@@ -204,10 +204,10 @@ namespace Render2D
 		*y = targetY;
 	}
 
-	int processtextwidth(int width) {
-		return width * (*currentAR / 1.77777777778f);
+int processtextwidth(int width) {
+	return width * (*currentAR / 1.77777777778f);
 
-	}
+}
 
 	float get_vint_x_resolution() {
 		if (*currentAR >= 1.77777777778f)
@@ -519,7 +519,36 @@ void fix_screen_fade_notint() {
 }
 
 SafetyHookMid final_2d_render{};
+
+typedef int(__cdecl* bink_renderT)(float l, float r,float w,float h);
+bink_renderT bink_render = (bink_renderT)0x4923F0;
+
+
+// A fix for bink videos being vert- (zoomed in) on aspect ratios that aren't matched to the .bik videos.
+int __cdecl bink_render_hook(float l, float r, float w, float h) {
+	BINK* bink_handle = *(BINK**)(0x140E670);
+	int display_w = *(int*)0x22FDC1C;
+	int display_h = *(int*)0x22FDC20;
+
+	if (!bink_handle || display_w < 1 || display_h < 1) {
+		return bink_render(l, r, w, h);
+	}
+
+	float display_aspect = (float)display_w / (float)display_h;
+	float movie_aspect = (float)bink_handle->Width / (float)bink_handle->Height;
+
+	if (display_aspect > movie_aspect) {
+		float corrected_w = (float)display_h * movie_aspect;
+		float corrected_l = ((float)display_w - corrected_w) * 0.5f;
+
+		return bink_render(corrected_l, 0.0f, corrected_w, (float)display_h);
+	}
+
+	return bink_render(l, r, w, h);
+}
+
 	void Init() {
+		patchCall((void*)0x688C7A, bink_render_hook);
 		// Fix vint UI speeding up at 1000?+ FPS
 		fix_screen_fade_notint();
 		patchNop((void*)0x00B8BC6B, 6);
