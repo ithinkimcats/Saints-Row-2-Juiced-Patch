@@ -74,7 +74,11 @@ namespace Game
 		unsigned __int8 outfits_scanned : 1;
 		unsigned __int8 cheats_scanned : 1;
 		unsigned __int8 gotr_detected : 1;
-		unsigned __int8 unused : 4;
+		unsigned __int8 audio_constants_scanned : 2;
+		unsigned __int8 trees_scanned : 2;
+		bool overhauled_stilwater_detected() {
+			return (!gotr_detected && audio_constants_scanned == 2 && trees_scanned == 2);
+		}
 	};
 	extern XTBLScanStatus xtbl_scan_status;
 	extern int s_CursorPosition;

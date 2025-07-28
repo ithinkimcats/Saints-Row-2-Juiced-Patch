@@ -432,12 +432,29 @@ namespace Game
 					xtbl_scan_status.cheats_scanned = 1;
 				}
 			}
+			else if (!xtbl_scan_status.audio_constants_scanned && strcmp(xtbl_filename, "audio_constants.xtbl") == 0) {
+				std::string xml_content(buffer);
+				if ((xml_content.find("<RadioDesiredVolumeScale>0.36</RadioDesiredVolumeScale>		//0.475") != std::string::npos && (xml_content.find("<Normal>1.0</Normal>	//0.75") != std::string::npos))) {
+					xtbl_scan_status.audio_constants_scanned = 2;
+				} else
+				xtbl_scan_status.audio_constants_scanned = 1;
+			} 
+			else if (!xtbl_scan_status.trees_scanned && strcmp(xtbl_filename, "trees.xtbl") == 0) {
+				std::string xml_content(buffer);
+				if ((xml_content.find("<FadeDistance>1000.0</FadeDistance>") != std::string::npos && (xml_content.find("<FadeDistance>400.0</FadeDistance>") != std::string::npos))) {
+					xtbl_scan_status.trees_scanned = 2;
+				}
+				else
+					xtbl_scan_status.trees_scanned = 1;
+			}
 
 			// Check if all files have been scanned and unhook if configured to do so
 			if (unhook_after_patching_xtbl_read_and_parse_file &&
 				xtbl_scan_status.bitmap_sheets_scanned &&
 				xtbl_scan_status.outfits_scanned &&
-				xtbl_scan_status.cheats_scanned) {
+				xtbl_scan_status.cheats_scanned && 
+				xtbl_scan_status.trees_scanned && 
+				xtbl_scan_status.audio_constants_scanned) {
 				Logger::TypedLog(CHN_XTBL, "All XTBL files processed. GOTR status: %s. Disabling hook.\n",
 					xtbl_scan_status.gotr_detected ? "DETECTED" : "NOT DETECTED");
 				(void)xtbl_read_and_parse_file_hook.disable();
