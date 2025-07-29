@@ -54,18 +54,20 @@ namespace Behavior
 		else return FindMeleeTarget(NPCPointer);
 	}
 
-	bool __declspec(naked) DisableMeleeLockon2() {
+	void __declspec(naked) DisableMeleeLockon2() {
 		static int Continue = 0x00974D06;
 		int NPCPointer;
 		__asm {
 			mov NPCPointer, eax
 		}
-		if (NPCPointer != UtilsGlobal::getplayer(true)) {
+		if (NPCPointer != UtilsGlobal::getplayer()) {
 			__asm {
+				mov eax, NPCPointer
 				mov ecx, 0x973360
 				call ecx
 			}
 		}
+		else __asm mov al, 1
 		__asm jmp Continue
 	}
 
