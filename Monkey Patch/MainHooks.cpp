@@ -790,8 +790,8 @@ void cus_FrameToggles() {
 		GameConfig::SetDoubleValue("Gameplay", "FOVMultiplier", Render3D::FOVMultiplier);
 
 	}
-
-	if (IsKeyPressed(VK_TAB, false) && *InCutscene && !isCoop()) {
+	bool select_just_pressed = *(bool*)(0x2347BA4);
+	if (select_just_pressed && *InCutscene && !isCoop()) {
 		CutscenePaused = !CutscenePaused;
 		CutscenePaused ? ShowPauseDialog(true, false, false, false) : RemovePauseDialog();
 	}
@@ -1202,6 +1202,7 @@ typedef int __cdecl RenderLoopStuff_Native();
 RenderLoopStuff_Native* UpdateRenderLoopStuff = (RenderLoopStuff_Native*)(0x00C063D0); //0x00BD4A80
 #if !JLITE
 int early_render_hook() {
+	((void(__cdecl*)())0x68C950)();
 	Debug::DynamicRenderDistance();
 	if (useJuicedOSD) {
 		PrintFrametime();
