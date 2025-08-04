@@ -496,6 +496,12 @@ namespace Input {
 	volatile char KEY_inventory_left = 'A';
 	volatile char KEY_inventory_right = 'D';
 	void Init() {
+		static auto tag_shake_frametimefix = safetyhook::create_mid(0x621C04, [](SafetyHookContext& ctx) {
+			if (g_lastInput == MOUSE) {
+				*(float*)(ctx.esp + 0x10) *= Game::Timer::Get33msOverFrameTime_Fix();
+			}
+			});
+
 		KEY_inventory_up = GameConfig::GetChar("Input", "KEY_inventory_up", KEY_inventory_up);
 		KEY_inventory_down = GameConfig::GetChar("Input", "KEY_inventory_down", KEY_inventory_down);
 		KEY_inventory_left = GameConfig::GetChar("Input", "KEY_inventory_left", KEY_inventory_left);
