@@ -311,14 +311,11 @@ namespace Input {
 	{19, L"dPadDown"}
 	};
 
-	std::unordered_map<int, const wchar_t*> actionsToXbox = {
-	{2, L"ui_ctrl_360_btn_ls"},
-	{3, L"ui_ctrl_360_btn_ls"},
-	};
-
-	std::unordered_map<int, const wchar_t*> actionsToPS3 = {
-	{2, L"ui_ctrl_ps3_btn_l3"},
-	{3, L"ui_ctrl_ps3_btn_l3"},
+	std::unordered_map<int, ControllerMapping> actionsToController = {
+	{2, {L"ui_ctrl_360_btn_ls",L"ui_ctrl_ps3_btn_l3"}},
+	{3, {L"ui_ctrl_360_btn_ls",L"ui_ctrl_ps3_btn_l3"}},
+	// ??? -Clippy95
+	{12, {L"ui_ctrl_360_btn_a", L"ui_ctrl_ps3_btn_cross"}},
 	};
 
 	bool useTextPrompts = false;
@@ -348,10 +345,10 @@ namespace Input {
 				wsprintf(&prompt_image_buffer[prompt_image_buffer_index], L"[format][scale:1.0][image:%s][/format]", buttonImage);
 			}
 			else if (controller_key == -1) {
-				auto& actionsMap = usePS3Prompts ? actionsToPS3 : actionsToXbox;
-				auto actionfinder = actionsMap.find(*action_index);
-				if (actionfinder != actionsMap.end())
-					wsprintf(&prompt_image_buffer[prompt_image_buffer_index], L"[format][scale:1.0][image:%s][/format]", actionfinder->second);
+				auto actionfinder = actionsToController.find(*action_index);
+				const wchar_t* buttonImageActions = usePS3Prompts ? actionfinder->second.ps3 : actionfinder->second.xbox;
+				if (actionfinder != actionsToController.end())
+					wsprintf(&prompt_image_buffer[prompt_image_buffer_index], L"[format][scale:1.0][image:%s][/format]", buttonImageActions);
 				else {
 					wsprintf(&prompt_image_buffer[prompt_image_buffer_index], L"[format][scale:0.7]Action %d[/format]", *action_index);
 				}
