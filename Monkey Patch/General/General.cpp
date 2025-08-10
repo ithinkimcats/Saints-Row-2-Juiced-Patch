@@ -651,9 +651,10 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 					customCode += buffer;
 
 					// Weird stuff on the screen you have to remove, also mayhem is re-stretched back.
+					char extraBuffer[850]{};
 					if (cached_str == "hud") {
 						using namespace Render2D;
-						char extraBuffer[670];
+						
 
 						snprintf(extraBuffer, sizeof(extraBuffer), lua_command, "extra_homie", "hud", "anchor",
 							(get_vint_x_resolution() - 1280) / 2.f, -500.f);
@@ -704,6 +705,12 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 
 						snprintf(extraBuffer, sizeof(extraBuffer), lua_command, "vignettes", "hud", "anchor",
 							-((get_vint_x_resolution() - 1280) / 2.f), 0.f);
+						customCode += "\n";
+						customCode += extraBuffer;
+					}
+					else if (cached_str == "pause_menu" || cached_str == "main_menu") {
+						snprintf(extraBuffer, sizeof(extraBuffer), lua_command, "cash_style_grp", "menu_base", "scale",
+							0.f, 0.f);
 						customCode += "\n";
 						customCode += extraBuffer;
 					}
