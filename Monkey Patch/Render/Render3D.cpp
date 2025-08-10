@@ -738,6 +738,11 @@ namespace Render3D
 
 	volatile float VehicleDespawnDistance = 140.f;
 	CPatch CIncreaseVehicleDespawnDistance = CPatch::SafeWrite32(0x0093BDF9,(uint32_t)&VehicleDespawnDistance);
+	static inline void setBL(SafetyHookContext& ctx, int val)
+	{
+		ctx.ebx = (ctx.ebx & 0xFFFFFF00) | (val & 0xFF);
+	}
+	SafetyHookMid screen_3d_to_2d_midhook;
 	void Init()
 	{
 		Shadows::Init();
@@ -821,6 +826,19 @@ namespace Render3D
 
 
 		WriteRelJump(0x00494080, (UInt32)&GetFOV);
+		// CLIPPY TODO MAKE THIS A TOGGLEABLE OPTION!!!
+		screen_3d_to_2d_midhook = safetyhook::create_mid(0xD22BE8, [](SafetyHookContext& ctx) {
+			if (UltrawideFixRatio == 1.0)
+				return;
+			float x_bound = 1.0f / UltrawideFixRatio;
+			float& x = *(float*)(ctx.esp + 0x10);
+			bool ultrawide = x < -x_bound || x > x_bound;
+			if (ultrawide) {
+				setBL(ctx, false);
+			}
+			x *= Render3D::UltrawideFixRatio;
+			});
+
 		if (GameConfig::GetValue("Gameplay", "FixUltrawideFOV", 1))
 		{
 			ARfov = 1;

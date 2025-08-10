@@ -653,7 +653,7 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 					// Weird stuff on the screen you have to remove, also mayhem is re-stretched back.
 					if (cached_str == "hud") {
 						using namespace Render2D;
-						char extraBuffer[512];
+						char extraBuffer[670];
 
 						snprintf(extraBuffer, sizeof(extraBuffer), lua_command, "extra_homie", "hud", "anchor",
 							(get_vint_x_resolution() - 1280) / 2.f, -500.f);
@@ -675,14 +675,19 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 						customCode += "\n";
 						customCode += extraBuffer;
 
-						snprintf(extraBuffer, sizeof(extraBuffer), lua_command, "mayhem_grp", "hud", "anchor",
-							-((get_vint_x_resolution() - 1280) / 2.f), 0.f);
+						float weirdscale = 1.f / (Render2D::widescreenvalue / *Render2D::currentAR);
+						//snprintf(extraBuffer, sizeof(extraBuffer), lua_command, "mayhem_grp", "hud", "scale",
+						//	weirdscale, 1.f);
+						//customCode += "\n";
+						//customCode += extraBuffer;
+
+						snprintf(extraBuffer, sizeof(extraBuffer), lua_command, "cash_txt", "hud", "scale",
+							0.f, 0.f);
 						customCode += "\n";
 						customCode += extraBuffer;
 
-						float weirdscale = 1.f / (Render2D::widescreenvalue / *Render2D::currentAR);
-						snprintf(extraBuffer, sizeof(extraBuffer), lua_command, "mayhem_grp", "hud", "scale",
-							weirdscale, 1.f);
+						snprintf(extraBuffer, sizeof(extraBuffer), lua_command, "multiplier_txt", "hud", "scale",
+							0.f, 0.f);
 						customCode += "\n";
 						customCode += extraBuffer;
 

@@ -370,12 +370,16 @@ int processtextwidth(int width) {
 
 			snprintf(buffer, sizeof(buffer), lua_command, "health_large_grp", "hud", "anchor", (get_vint_x_resolution() - 1280) / 2.f, -500.f);
 			General::VintExecute(buffer);
-			snprintf(buffer, sizeof(buffer), lua_command, "mayhem_grp", "hud", "anchor", -((get_vint_x_resolution() - 1280) / 2.f), 0.f);
-			General::VintExecute(buffer);
 
 			float weirdscale = 1.f / (widescreenvalue / *currentAR);
-			snprintf(buffer, sizeof(buffer), lua_command, "mayhem_grp", "hud", "scale", weirdscale, 1.f);
-			General::VintExecute(buffer);
+			//snprintf(buffer, sizeof(buffer), lua_command, "mayhem_grp", "hud", "scale", weirdscale, 1.f);
+			//General::VintExecute(buffer);
+
+			snprintf(buffer, sizeof(buffer), lua_command, "cash_txt", "hud", "scale",
+				0.f, 0.f);
+
+			snprintf(buffer, sizeof(buffer), lua_command, "multiplier_txt", "hud", "scale",
+				0.f, 0.f);
 
 			snprintf(buffer, sizeof(buffer), lua_command, "vignettes", "hud", "anchor", -((get_vint_x_resolution() - 1280) / 2.f), 0.f);
 			General::VintExecute(buffer);

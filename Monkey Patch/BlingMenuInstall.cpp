@@ -255,6 +255,7 @@ namespace BlingMenuInstall
         BM_MakeSafetyHookFunction(Math_multiplication_NAN_fix, matrix_operator_multiplication_midhook,Math::Fixes)
         BM_MakeSafetyHookFunction(UI_hook, final_2d_render, Render2D)
         BM_MakeSafetyHookFunction(FixFrametimeVehicleSkids, FixFrametimeVehicleSkids, Game)
+        BM_MakeSafetyHookFunction(screen_3d_to_2d_midhook, screen_3d_to_2d_midhook, Render3D)
     void BM_restoreHavok() {
         if(!Debug::fixFrametime)
             *(float*)(0x02527DA4) = 0.01666666666f;
@@ -403,6 +404,7 @@ namespace BlingMenuInstall
        BlingMenuAddInt("Juiced Debug", "SHADER_LOD", (int*)&Render3D::SHADER_LOD, NULL, 1, -2, 10);
        BlingMenuAddFloat("Juiced Debug", "SHADER_DISTANCE_SQUARED_MULT", &Render3D::SHADER_DISTANCE_SQUARED_MULT, NULL, 0.1f, 1.f, 250.f);
        BlingMenuAddFuncCustom("Juiced Debug", "Math_multiplication_NAN_fix", NULL, &BM_Math_multiplication_NAN_fix, NULL);
+       BlingMenuAddFuncCustom("Juiced Debug", "screen_3d_to_2d_midhook", NULL, &BM_screen_3d_to_2d_midhook, NULL);
        BlingMenuAddBool("Juiced Debug", "useTextPrompts", &Input::useTextPrompts, NULL);
        BlingMenuAddInt("Juiced Debug", "Use PS3 Prompts", &Input::usePS3Prompts, NULL, 1, 0, 1);
        }
