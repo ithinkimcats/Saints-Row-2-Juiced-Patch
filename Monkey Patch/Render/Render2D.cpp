@@ -551,7 +551,73 @@ int __cdecl bink_render_hook(float l, float r, float w, float h) {
 	return bink_render(l, r, w, h);
 }
 
+
+
+char __cdecl bitmap_minimap_render_player(
+	uint32_t id,
+	float x,
+	float y,
+	float angle,
+	float scale,
+	DWORD unk) {
+
+	if (*(bool*)0x2528615)
+		return ((char(__cdecl*)(uint32_t, float, float, float, float, DWORD))0xB87C10)(id, x, y, angle, scale, unk);
+
+	if (UtilsGlobal::getplayer()) {
+		float* PlayerSin = (float*)(UtilsGlobal::getplayer() + 0x38);
+		float* PlayerCos = (float*)(UtilsGlobal::getplayer() + 0x40);
+
+		angle = -angle;
+		float playerAngle = -atan2f(*PlayerSin, *PlayerCos) + M_PI;
+		angle = angle - playerAngle;
+
+		if (isfinite(angle)) {
+			angle = fmodf(angle, 2.0f * M_PI);
+			if (angle < 0) angle += 2.0f * M_PI;
+		}
+	}
+
+	return ((char(__cdecl*)(uint32_t, float, float, float, float, DWORD))0xB87C10)(id, x, y, angle, scale, unk);
+}
+
+char __cdecl bitmap_pause_map_render_player(
+	uint32_t id,
+	float x,
+	float y,
+	float angle,
+	float scale,
+	DWORD unk) {
+
+
+	if (UtilsGlobal::getplayer()) {
+		float* PlayerSin = (float*)(UtilsGlobal::getplayer() + 0x38);
+		float* PlayerCos = (float*)(UtilsGlobal::getplayer() + 0x40);
+
+		float playerAngle = -atan2f(*PlayerSin, *PlayerCos) + M_PI;
+		angle = -playerAngle;
+
+		if (isfinite(angle)) {
+			angle = fmodf(angle, 2.0f * M_PI);
+			if (angle < 0) angle += 2.0f * M_PI;
+		}
+	}
+		return ((char(__cdecl*)(uint32_t, float, float, float, float, DWORD))0xB87C10)(id, x, y, angle, scale, unk);
+	
+}
+
+CMultiPatch CMPatches_ProperPlayerCursor = {
+
+	[](CMultiPatch& mp) {
+		mp.AddWriteRelCall(0x7A3C8B,(uintptr_t)&bitmap_minimap_render_player);
+		mp.AddWriteRelCall(0x7704CC, (uintptr_t)&bitmap_pause_map_render_player);
+		mp.AddWriteRelJump(0x7A3C95, 0x7A3C11);
+	},
+
+};
 	void Init() {
+		if(GameConfig::GetValue("Graphics","mini_pause_map_PlayerRotation",1))
+		CMPatches_ProperPlayerCursor.Apply();
 		patchCall((void*)0x688C7A, bink_render_hook);
 		// Fix vint UI speeding up at 1000?+ FPS
 		fix_screen_fade_notint();
