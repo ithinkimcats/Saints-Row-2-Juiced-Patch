@@ -601,6 +601,7 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 				}
 
 				const char* lua_command = "vint_set_property(vint_object_find(\"%s\", 0, vint_document_find(\"%s\")), \"%s\", %f, %f)";
+				const char* lua_string = "vint_set_property(vint_object_find(\"%s\", 0, vint_document_find(\"%s\")), \"%s\", \"%s\")";
 				char buffer[512];
 #if !JLITE
 				if (Render2D::IVRadarScaling) {
@@ -682,13 +683,13 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 						//customCode += "\n";
 						//customCode += extraBuffer;
 
-						snprintf(extraBuffer, sizeof(extraBuffer), lua_command, "cash_txt", "hud", "scale",
-							0.f, 0.f);
+						snprintf(extraBuffer, sizeof(extraBuffer), lua_string, "cash_txt", "hud", "text_tag",
+							"");
 						customCode += "\n";
 						customCode += extraBuffer;
 
-						snprintf(extraBuffer, sizeof(extraBuffer), lua_command, "multiplier_txt", "hud", "scale",
-							0.f, 0.f);
+						snprintf(extraBuffer, sizeof(extraBuffer), lua_string, "multiplier_txt", "hud", "text_tag",
+							"");
 						customCode += "\n";
 						customCode += extraBuffer;
 
