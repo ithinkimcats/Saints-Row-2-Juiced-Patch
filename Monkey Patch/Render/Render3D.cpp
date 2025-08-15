@@ -892,16 +892,16 @@ namespace Render3D
 		}
 
 		// Removes all necessary sleep calls in the game, doubles fps and mitigates stutter, tanks CPU usage.
-		if (GameConfig::GetValue("Debug", "SleepHack", 0) == 1) // LOW patch
+		if (GameConfig::GetValue("Debug", "SleepHack", 2) == 1) // LOW patch
 		{
 			Render3D::PatchLowSleepHack();
 		}
 
-		if (GameConfig::GetValue("Debug", "SleepHack", 0) == 2) // MEDIUM patch
+		if (GameConfig::GetValue("Debug", "SleepHack", 2) == 2) // MEDIUM patch
 		{
 			Render3D::PatchMediumSleepHack();
 		}
-		if (GameConfig::GetValue("Debug", "SleepHack", 0) == 3) // HIGH patch, because why not i guess.
+		if (GameConfig::GetValue("Debug", "SleepHook", 0) == 1)
 		{
 			Logger::TypedLog(CHN_DLL, "Hooking sleep...\n");
 			Render3D::HookSleep();

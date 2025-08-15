@@ -250,7 +250,7 @@ namespace GLua
             Render3D::CPatches_MediumSleepHack.Apply();
         }
         else if (value == 3) {
-            Render3D::HookSleep();
+            //Render3D::HookSleep();
             Render3D::CMPatches_PatchLowSleepHack.Apply();
             Render3D::CPatches_MediumSleepHack.Apply();
         }
