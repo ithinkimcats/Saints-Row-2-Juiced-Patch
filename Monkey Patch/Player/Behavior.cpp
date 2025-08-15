@@ -386,7 +386,7 @@ CMultiPatch CMPatches_SR1Reloading = {
 			FasterDoors();
 		}
 
-		if (GameConfig::GetValue("Gameplay", "SR1Reloading", 1))
+		if (GameConfig::GetValue("Gameplay", "SR1Reloading", 0))
 		{
 			SR1Reloading();
 		}
