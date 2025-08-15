@@ -58,9 +58,10 @@ namespace InGameConfig {
     {"UseWeaponAfterEmpty",&Behavior::CMPatches_UseWeaponAfterEmpty,nullptr,"Gameplay","Keep Weapon After Empty"},
     {"TauntCancelling",&Behavior::CMPatches_UseWeaponAfterEmpty,nullptr,"Gameplay","TauntCancelling"},
     {"DisableTutorials",nullptr,&Game::CDisable_Tutorials,"Gameplay","DisableTutorials"},
-    {"AllowWeaponSwitchInAllCases",nullptr,&Behavior::CAllowWeaponSwitchInAllCases_KBM,"Gameplay","AllowWeaponSwitchInAllCases"},
+    {"mini_pause_map_PlayerRotation",&Render2D::CMPatches_ProperPlayerCursor,nullptr,"Graphics","mini_pause_map_PlayerRotation"},
 #endif
     {"SR1CrouchCam",nullptr,&Behavior::CSR1CrouchCam,"Gameplay","SR1CrouchCam"},
+     { "IncreaseVehicleFadeDistance",nullptr ,&Render3D::CIncreaseVehicleDespawnDistance,"Gameplay","IncreaseVehicleFadeDistance"},
      { "IncreaseVehicleFadeDistance",nullptr ,&Render3D::CIncreaseVehicleDespawnDistance,"Gameplay","IncreaseVehicleFadeDistance"},
     };
     void AddOptions() {
@@ -118,6 +119,7 @@ namespace InGameConfig {
         InGameConfig::RegisterBoolSlider("NoMeleeLockOn", "NoMeleeLockOn", InGameConfig::MenuType::CONTROLS);
         InGameConfig::RegisterBoolSlider("DisableDistantPeds", "DisableDistantPeds");
         InGameConfig::RegisterBoolSlider("DisableDistantVehicles", "DisableDistantVehicles");
+        InGameConfig::RegisterBoolSlider("mini_pause_map_PlayerRotation", "Ingame-map player rotation");
 #endif
 #if !JLITE
         InGameConfig::RegisterBoolSlider("BetterAnimBlend", "Better Anim Blend");

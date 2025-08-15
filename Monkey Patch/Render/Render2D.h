@@ -1,5 +1,6 @@
 #pragma once
 #include <safetyhook.hpp>
+#include "../Patcher/CMultiPatch.h"
 namespace Render2D
 {
     typedef float(__cdecl* ChangeTextColorT)(int R, int G, int B, int Alpha);
@@ -49,4 +50,5 @@ namespace Render2D
 	};
 
 	extern SafetyHookMid final_2d_render;
+	extern CMultiPatch CMPatches_ProperPlayerCursor;
 }
