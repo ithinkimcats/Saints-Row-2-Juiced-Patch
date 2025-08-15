@@ -6,6 +6,7 @@
 #include "../Patcher/patch.h"
 #include "../GameConfig.h"
 #include "Math.h"
+#include "../Player/Input.h"
 namespace Math
 {
 	void matrix_multiply_safe(matrix* result, const matrix* lhs, const matrix* rhs) {
@@ -168,7 +169,8 @@ namespace Math
 
 			return a1[3];
 		}
-
+		signed char FixWater = 1;
+		bool SimulateWaterBug = false;
 		void Init() {
 			int cpuinfo[4]{};
 			__cpuid(cpuinfo, 1);
@@ -227,6 +229,67 @@ namespace Math
 					ctx.eip = 0x00BDB54E;
 					});
 			}
+
+			static vector2 smoothed_cam_dir = vector2::zero();
+			static bool smooth_init = false;
+			static constexpr float SMOOTH_RATE = 0.08f;
+			static float bug_timer = 0.0f;
+
+			// This is a work around and not a proper fix. -- Clippy
+			if(GameConfig::GetValue("Debug","FixWaterVolumeCameraBug",1))
+			static auto watervol_midhook1 = safetyhook::create_mid(0x72635C, [](SafetyHookContext& ctx) {
+				vector2* cam_forward = (vector2*)(ctx.esp + 0x14);
+
+				/*if (SimulateWaterBug) {
+					float game_frametime = *(float*)0xE84380;
+					game_frametime = (std::min)(game_frametime, 0.1f);
+
+					bug_timer += game_frametime * 15.0f;  // Higher frequency for rapid changes
+					float crazy_x = std::sin(bug_timer * 25.0f) * 1.5f;  // Realistic magnitude ~1.5
+					float crazy_y = std::cos(bug_timer * 20.0f) * 1.3f;  // Different frequency, ~1.3 max
+
+					// Apply realistic orientation changes
+					*cam_forward = vector2(crazy_x, crazy_y);
+				}
+				*/
+
+
+					if (Input::g_lastInput != Input::GAME_LAST_INPUT::MOUSE) {
+						return;
+					}
+
+					if (!smooth_init) {
+						smoothed_cam_dir = *cam_forward;
+						smooth_init = true;
+						return;
+					}
+
+					vector2 delta = *cam_forward - smoothed_cam_dir;
+					float delta_magnitude = delta.magnitude();
+					bool is_rapid_change = delta_magnitude > 1.0f;
+
+					//if (is_rapid_change)
+					//	printf("rapid change detected: %.2f\n", delta_magnitude);
+
+					if (!cam_forward->isNull()) {
+						float adaptive_rate = is_rapid_change ? 0.005f : SMOOTH_RATE; 
+
+
+						smoothed_cam_dir = smoothed_cam_dir.lerp(*cam_forward, adaptive_rate);
+						*cam_forward = smoothed_cam_dir;
+					}
+					else {
+						// If current vector is null, gradually decay the smoothed vector
+						smoothed_cam_dir = smoothed_cam_dir * (1.0f - SMOOTH_RATE);
+						// If smoothed vector becomes very small, zero it out
+						if (smoothed_cam_dir.magnitude() < 1e-6f) {
+							smoothed_cam_dir = vector2::zero();
+						}
+					}
+					return;
+				
+				});
+
 		}
 	}
 	void Init() {

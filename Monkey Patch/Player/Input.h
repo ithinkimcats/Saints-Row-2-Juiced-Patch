@@ -14,6 +14,7 @@ namespace Input {
 	extern SafetyHookMid player_autoaim_do_assisted_aiming_midhook;
 	extern GAME_LAST_INPUT LastInput();
 	extern GAME_LAST_INPUT LastInputUI();
+	extern GAME_LAST_INPUT g_lastInput;
 	extern int usePS3Prompts;
 	extern int ForceInput;
 	extern BYTE EnableDynamicPrompts;
