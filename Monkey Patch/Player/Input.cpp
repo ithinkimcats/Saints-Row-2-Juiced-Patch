@@ -492,7 +492,20 @@ namespace Input {
 	volatile char KEY_inventory_down = 'S';
 	volatile char KEY_inventory_left = 'A';
 	volatile char KEY_inventory_right = 'D';
+	inline void patch_zoom_aware_interior_pause_map() {
+		patchNop((void*)0x771DB7, 0x2E);
+		static auto zoom_aware_interior_pause_map = safetyhook::create_mid(0x771DB7, [](SafetyHookContext& ctx) {
+			using namespace UtilsGlobal;
+			vector2* pause_map_crosshair = (vector2*)(0x29C8E1C);
+			float zoom_modifier = 1.f;
+			if (*(bool*)0x2528269)
+				zoom_modifier = (*(float*)0x1F7A8CC / *(float*)0x00E8DFA8) * 0.8f;
+			pause_map_crosshair->x -= ((float)mouse().getXdelta() * mouse().getMouseX_sens()) * zoom_modifier;
+			pause_map_crosshair->y += ((float)mouse().getYdelta() * mouse().getMouseY_sens()) * zoom_modifier;
+			});
+	}
 	void Init() {
+		patch_zoom_aware_interior_pause_map();
 		static auto tag_shake_frametimefix = safetyhook::create_mid(0x621C04, [](SafetyHookContext& ctx) {
 			if (g_lastInput == MOUSE) {
 				*(float*)(ctx.esp + 0x10) *= Game::Timer::Get33msOverFrameTime_Fix();
