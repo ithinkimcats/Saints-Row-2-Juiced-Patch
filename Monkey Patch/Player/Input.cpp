@@ -511,7 +511,9 @@ namespace Input {
 				*(float*)(ctx.esp + 0x10) *= Game::Timer::Get33msOverFrameTime_Fix();
 			}
 			});
-
+		if (GameConfig::GetValue("Gameplay", "allow_reloading_in_cars", 0) != 0) {
+			patchDWord((void*)(0x4F61D6 + 6), 0xC20100);
+		}
 		KEY_inventory_up = GameConfig::GetChar("Input", "KEY_inventory_up", KEY_inventory_up);
 		KEY_inventory_down = GameConfig::GetChar("Input", "KEY_inventory_down", KEY_inventory_down);
 		KEY_inventory_left = GameConfig::GetChar("Input", "KEY_inventory_left", KEY_inventory_left);
