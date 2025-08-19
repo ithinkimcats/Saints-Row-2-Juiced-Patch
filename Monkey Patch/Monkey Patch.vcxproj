@@ -379,6 +379,9 @@ copy /Y "$(TargetDir)DFEngine.dll" "E:\Steam\steamapps\common\Saints Row 2\DFEng
   <ItemGroup>
     <ResourceCompile Include="Properties.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\juiced.ini" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

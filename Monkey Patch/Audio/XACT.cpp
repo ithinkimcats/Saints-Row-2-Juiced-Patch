@@ -83,7 +83,7 @@ namespace XACT
 	}
 	void UpdateToNewerXACT()
 	{
-		if (GameConfig::GetValue("Audio", "UseFixedXACT", 1)) // Scanti the Goat
+		if (GameConfig::GetValue("Audio", "UseFixedXAudio", 1)) // Scanti the Goat
 		{
 			// Forces the game to use a newer version of XACT which in turn fixes all of the audio issues
 			// in SR2 aside from 3D Panning.

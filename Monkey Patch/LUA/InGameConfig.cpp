@@ -30,7 +30,7 @@ namespace InGameConfig {
 #if !JLITE
     { "Graphics", "RemoveVignette" },
 #endif
-    { "Audio", "UseFixedXACT" },
+    { "Audio", "UseFixedXAudio" },
     {"Graphics","RemovePixelationShader"},
     {"Debug","FasterLoading"},   
     {"Gameplay","ForceMetricSystem"},
