@@ -246,13 +246,11 @@ int processtextwidth(int width) {
 	}
 
 	void InGamePrint(const char* Text, int x, int y, int font) {
-		int game_setting_language = *(int*)0x00E98AF8;
-		switch (game_setting_language) {
-		case LANG_JAPANESE:
-		case LANG_CHINESE:
-
-			font = 0; // Fixes crash for Japanese and Chinese SR2 and our InGamePrint
-			break;
+		if (font == 2) {
+			font = *(int*)0x00E98A90;
+		}
+		else if (font == 6) {
+			font = *(int*)0x00E98A24;
 		}
 		InGamePrintASM(Text, x, y, font);
 

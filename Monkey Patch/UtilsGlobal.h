@@ -18,6 +18,10 @@ inline int RetZero() {
     return 0;
 }
 
+inline bool RetFalse() {
+    return false;
+}
+
 // Returns the address last in the chain, for example if value of ADDRESS (0x1)
 // 0x1 + 0x2 = 0x4,
 // and value of ADDRESS (0x4)
@@ -56,7 +60,7 @@ inline bool isPaused;
 #if JLITE
 inline const char* juicedversion = "1.5.1";
 #else
-inline const char* juicedversion = "7.9.3";
+inline const char* juicedversion = "7.9.5";
 #endif
 
 inline const char* thaRowmenuversion = "0.0.1";
