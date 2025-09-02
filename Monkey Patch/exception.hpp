@@ -814,6 +814,9 @@ LONG WINAPI CustomUnhandledExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
                 wcscat_s(errorPopup, L"Details:\nUseFixedXAudio doesn't work on your system because XAudio2.3 isn't installed. This feature has been skipped and turned off in the .ini file. Please install DirectX End-User Runtimes to use this feature.");
                 GameConfig::SetValue("Audio", "UseFixedXAudio", 0);
                 break;
+            case 0x007C3E71:
+                wcscat_s(errorPopup, L"Details:\nMost likely cause is that this save has modded clothing which isn't currently installed to the game");
+                break;
             }
             wcscat_s(errorPopup, L"Please send this logging file located at:\n\n");
             wcscat_s(errorPopup, filename);
