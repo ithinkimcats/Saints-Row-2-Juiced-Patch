@@ -14,7 +14,7 @@ Fixes marked with ⚙️ can be configured/toggled via the INI file / BlingMenu
 * Fixed several game crashes.
 * Fixed over 35 broken shaders.
 * Automatically LAA patch SR2's exe, (including Steam)
-* Fix semi-common texture crash that was caused in "add_to_entry"
+* Fix semi-common texture crash.
 * Fix water being black in the distance.
 * Allow users to select current resolution from in-game options.
 [^1]: Sleephack effects are greatly enhanced with the usage of [DXVK](https://github.com/doitsujin/dxvk).
