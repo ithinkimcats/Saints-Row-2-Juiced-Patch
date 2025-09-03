@@ -8,7 +8,9 @@
 
 // This replaces the function that fills in the FILE_INFO structure if the file exists on the disk, with the file's information.
 
-bool __stdcall raw_get_file_info_by_name_inner(FILE_INFO* file_info, char* filename, BOOL override_check)
+std::string loaded_files_to_render;
+
+bool __stdcall raw_get_file_info_by_name_inner_wrapped(FILE_INFO* file_info, char* filename, BOOL override_check)
 {
 	FILE* file_stream;
 	_int64 file_size;
@@ -53,6 +55,62 @@ bool __stdcall raw_get_file_info_by_name_inner(FILE_INFO* file_info, char* filen
 	return(true);
 }
 
+
+// Helper function to count lines in a string
+int count_lines(const std::string& str) {
+	return std::count(str.begin(), str.end(), '\n');
+}
+
+// Helper function to remove lines from the beginning until we're under the limit
+void trim_to_max_lines(std::string& str, int max_lines) {
+	int line_count = count_lines(str);
+	if (line_count <= max_lines) return;
+
+	int lines_to_remove = line_count - max_lines;
+	size_t pos = 0;
+
+	// Find the position after the lines we want to remove
+	for (int i = 0; i < lines_to_remove && pos != std::string::npos; ++i) {
+		pos = str.find('\n', pos);
+		if (pos != std::string::npos) {
+			pos++; // Move past the newline
+		}
+	}
+
+	if (pos != std::string::npos && pos < str.length()) {
+		str = str.substr(pos);
+	}
+}
+
+bool __stdcall raw_get_file_info_by_name_inner(FILE_INFO* file_info, char* filename, BOOL override_check) {
+	auto result = raw_get_file_info_by_name_inner_wrapped(file_info, filename, override_check);
+
+	int MAX_LINES = 41;
+	if (!*(bool*)0x025272DD) {
+		MAX_LINES = 26;
+	}
+
+	if (file_info && file_info->filename[0]) {
+		loaded_files_to_render += std::string(file_info->filename) + "\n";
+		Logger::TypedLog("LOOSE_FILE", "%s\n", file_info->filename);
+		// Trim to maximum lines to prevent infinite growth
+		trim_to_max_lines(loaded_files_to_render, MAX_LINES);
+	}
+	return result;
+}
+
+void* raw_get_file_info_by_name_inner_cb = &raw_get_file_info_by_name_inner;
+
+void loose_files_render_status(bool get_ready_to_append_to_render) {
+	if (!get_ready_to_append_to_render) {
+		raw_get_file_info_by_name_inner_cb = &raw_get_file_info_by_name_inner_wrapped;
+		loaded_files_to_render.clear();
+	}
+	else {
+		raw_get_file_info_by_name_inner_cb = &raw_get_file_info_by_name_inner;
+	}
+}
+
 // Wrapper to convert bool __usercall func@<eax> (FILE_INFO *file_info@<edi>, char * filename, BOOL override_check) to
 // bool __stdcall func (FILE_INFO *file_info, char *filename, BOOL override_check)
 
@@ -66,7 +124,7 @@ bool __declspec(naked) hook_raw_get_file_info_by_name(char* filename, BOOL overr
 		mov	ecx, DWORD PTR 8[ebp]
 		push	ecx
 		push	edi
-		call raw_get_file_info_by_name_inner
+		call raw_get_file_info_by_name_inner_cb
 		pop	ebp
 		ret	0
 	}

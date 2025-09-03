@@ -17,6 +17,7 @@
 #include "Render3D.h"
 #include "..\Ext\Hooking.Patterns.h"
 #include <random>
+#include "../loose files.h"
 namespace Render2D
 {
 	float* currentAR = (float*)0x022FD8EC;
@@ -233,6 +234,35 @@ int processtextwidth(int width) {
 			push y
 
 			mov eax, 0xD15DC0
+			call eax
+
+			pop eax
+			pop esi
+			pop edi
+
+			mov esp, ebp
+			pop ebp
+			ret
+		}
+	}
+
+	void __declspec(naked) InGamePrintASMS(int a1, const char* a2, int a3, int a4, float a5) {
+		__asm {
+			push ebp
+			mov ebp, esp
+			sub esp, __LOCAL_SIZE
+
+			push edi
+			push esi
+			push eax
+
+			mov edi, a1
+			mov esi, a2
+			push a5
+			push a4
+			push a3
+
+			mov eax, 0xD15D00
 			call eax
 
 			pop eax
@@ -613,7 +643,20 @@ CMultiPatch CMPatches_ProperPlayerCursor = {
 	},
 
 };
+
+void __fastcall vint_sr2_render(void* thisa) {
+	((void(__thiscall*)(void*))0x7F33B0)(thisa);
+
+	if (!loaded_files_to_render.empty()) {
+		std::string display_text = loaded_files_to_render + "[JUICED] These are loose files loaded during THIS loading screen.";
+		ChangeTextColor(238, 130, 238, 255);
+		InGamePrintASMS(6, display_text.c_str(), 0, 0, 0.7f);
+	}
+}
+
 	void Init() {
+		if(GameConfig::GetValue("Debug","DisplayLooseFilesLoading",1))
+		patchCall((void*)0x68C607, vint_sr2_render);
 		if(GameConfig::GetValue("Graphics","mini_pause_map_PlayerRotation",1))
 		CMPatches_ProperPlayerCursor.Apply();
 		patchCall((void*)0x688C7A, bink_render_hook);

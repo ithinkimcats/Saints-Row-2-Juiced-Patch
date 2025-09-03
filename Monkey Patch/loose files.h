@@ -33,6 +33,9 @@ bool __stdcall raw_get_file_info_by_name_inner(FILE_INFO* file_info, char* filen
 extern bool  hook_raw_get_file_info_by_name(char* filename, BOOL override_check);
 extern void hook_loose_files();
 
+extern void loose_files_render_status(bool get_ready_to_append_to_render = false);
+
+extern std::string loaded_files_to_render;
 
 
 struct FILEDATA

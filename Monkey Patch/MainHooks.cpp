@@ -53,6 +53,7 @@
 #include <Shlwapi.h>
 #include "LUA/InGameConfig.h"
 #include "../Game/CrashFixes.h"
+#include "loose files.h"
 
 using namespace General;
 const char ServerNameSR2[] = "[Saints Row 2]";
@@ -1474,6 +1475,7 @@ void ModWarningMessage(const char* file_to_check_to_ignore, const wchar_t* title
 }
 
 int* sub_73D900() {
+	loose_files_render_status(false);
 #if !JLITE && !RELOADED
 	if(GameConfig::GetValue("Misc", "UpdateChecks", 1)){
 	auto result = PatchNotifier::checkForPatchUpdate();
