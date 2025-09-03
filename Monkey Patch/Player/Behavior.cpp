@@ -252,6 +252,9 @@ CMultiPatch CMPatches_SR1Reloading = {
 		//SafeWrite32(0x0049BD9C + 2, (UInt32)&garbagedata); // Y-Axis
 		CMPatches_DisableLockedClimbCam.Apply();
 	}
+
+	CPatch CDisableSprintCamShake = CPatch::SafeWrite32(0xE997FC,0);
+
 	SafetyHookMid cf_do_control_mode_sticky_MIDASMHOOK;
 
 	// This is modifiable in the game's xtbl, they're called `Default_Time` and `Stopped_Time`, 
@@ -313,6 +316,10 @@ CMultiPatch CMPatches_SR1Reloading = {
 	}
 	void Init()
 	{
+		if (GameConfig::GetValue("Gameplay", "DisableSprintCamShake", 0)) {
+			Logger::TypedLog(CHN_DEBUG, "DisableSprintCamShake..\n");
+			CDisableSprintCamShake.Apply();
+		}
 		LessCameraVehicleFollow = safetyhook::create_mid(0x498B5A, [](SafetyHookContext& ctx) {
 			float* follow_camera = (float*)(ctx.ebx + 0x5C);
 			if (*follow_camera != -1.f)

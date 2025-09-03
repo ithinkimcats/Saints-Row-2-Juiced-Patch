@@ -61,6 +61,7 @@ namespace InGameConfig {
     {"mini_pause_map_PlayerRotation",&Render2D::CMPatches_ProperPlayerCursor,nullptr,"Graphics","mini_pause_map_PlayerRotation"},
 #endif
     {"SR1CrouchCam",nullptr,&Behavior::CSR1CrouchCam,"Gameplay","SR1CrouchCam"},
+    {"DisableSprintCamShake",nullptr,&Behavior::CDisableSprintCamShake,"Gameplay","DisableSprintCamShake"},
      { "IncreaseVehicleFadeDistance",nullptr ,&Render3D::CIncreaseVehicleDespawnDistance,"Gameplay","IncreaseVehicleFadeDistance"},
      { "IncreaseVehicleFadeDistance",nullptr ,&Render3D::CIncreaseVehicleDespawnDistance,"Gameplay","IncreaseVehicleFadeDistance"},
     };
@@ -112,6 +113,7 @@ namespace InGameConfig {
 
         InGameConfig::RegisterBoolSlider("BetterDriveByCam", "Better Drive-by Cam", InGameConfig::MenuType::CONTROLS);
         InGameConfig::RegisterBoolSlider("BetterHandbrakeCam", "Better Handbrake Cam", InGameConfig::MenuType::CONTROLS);
+        InGameConfig::RegisterBoolSlider("DisableSprintCamShake", "DisableSprintCamShake", InGameConfig::MenuType::CONTROLS);
         InGameConfig::RegisterBoolSlider("SR1Reloading", "SR1Reloading", InGameConfig::MenuType::CONTROLS);
         InGameConfig::RegisterBoolSlider("SR1QuickSwitch", "SR1QuickSwitch", InGameConfig::MenuType::CONTROLS);
         InGameConfig::RegisterBoolSlider("SR1CrouchCam", "SR1CrouchCam", InGameConfig::MenuType::CONTROLS);
