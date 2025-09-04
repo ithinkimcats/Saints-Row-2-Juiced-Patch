@@ -357,7 +357,10 @@ CMultiPatch CMPatches_SR1Reloading = {
 		patchNop((BYTE*)0x009AC52B, 8);
 		patchByte((BYTE*)0x009C3AB8, 0xEB); // jmp a check in can drop weapons.
 #endif
-
+		if (GameConfig::GetValue("Gameplay", "SprintWhileOnFire", 0))
+		{
+			patchCall((BYTE*)0x004F8B45, UtilsGlobal::RetZero);
+		}
 		if (GameConfig::GetValue("Gameplay", "AllowWeaponSwitchInAllCases", 0))
 		{
 			CAllowWeaponSwitchInAllCases_KBM.Apply();
