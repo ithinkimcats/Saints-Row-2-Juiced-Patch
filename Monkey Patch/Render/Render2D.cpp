@@ -206,7 +206,14 @@ namespace Render2D
 	}
 
 int processtextwidth(int width) {
-	return width * (*currentAR / 1.77777777778f);
+	if (*currentAR >= 1.77777777778f) {
+		int offset = (int)(*currentAR * 720);
+		offset -= 1280;
+		if (offset != 0) {
+			width += offset / 2;
+		}
+	}
+	return width;
 
 }
 
@@ -304,16 +311,34 @@ int processtextwidth(int width) {
 #else
 #if !RELOADED
 		if (*(BYTE*)0x02527B75 == 1 && *(BYTE*)0xE8D56B == 1) {
+
+			bool& r_is_widescreen = *(bool*)0x025272DD;
+
+			int x = 0;
+			int y = 0;
+			if (r_is_widescreen) {
+				x = processtextwidth(1120);
+				y = 680;
+			}
+
 			ChangeTextColor(160, 160, 160, 128);
 			__asm pushad
-			InGamePrint((JuicedText + std::string(UtilsGlobal::juicedversion)).c_str(), 680, processtextwidth(1120), 2);
+			InGamePrint((JuicedText + std::string(UtilsGlobal::juicedversion)).c_str(), y, x, 2);
 			__asm popad
 		}
 #else
 		if (*(BYTE*)0xE8D56B == 1) {
+
+			int x = 0;
+			int y = 0;
+			if (r_is_widescreen) {
+				x = processtextwidth(1120);
+				y = 640;
+			}
+
 			ChangeTextColor(160, 160, 160, 128);
 			__asm pushad
-			InGamePrint(("THAROW " + std::string(UtilsGlobal::thaRowmenuversion)).c_str(), 680, processtextwidth(1120), 2);
+			InGamePrint(("THAROW " + std::string(UtilsGlobal::thaRowmenuversion)).c_str(), y, x, 2);
 			__asm popad
 		}
 #endif
@@ -650,7 +675,8 @@ void __fastcall vint_sr2_render(void* thisa) {
 	if (!loaded_files_to_render.empty()) {
 		std::string display_text = loaded_files_to_render + "[JUICED] These are loose files loaded during THIS loading screen.";
 		ChangeTextColor(238, 130, 238, 255);
-		InGamePrintASMS(6, display_text.c_str(), 0, 0, 0.7f);
+
+		InGamePrintASMS(6, display_text.c_str(), processtextwidth(0), 0, 0.7f);
 	}
 }
 
