@@ -253,7 +253,7 @@ int processtextwidth(int width) {
 		}
 	}
 
-	void __declspec(naked) InGamePrintASMS(int a1, const char* a2, int a3, int a4, float a5) {
+	void __declspec(naked) InGamePrintASMSS(int a1, const char* a2, int a3, int a4, float a5) {
 		__asm {
 			push ebp
 			mov ebp, esp
@@ -282,8 +282,18 @@ int processtextwidth(int width) {
 		}
 	}
 
+	void InGamePrintScale(int font, const char* a2, int a3, int a4, float a5) {
+		if (font == 2 || font == 0) {
+			font = *(int*)0x00E98A90;
+		}
+		else if (font == 6) {
+			font = *(int*)0x00E98A24;
+		}
+		InGamePrintASMSS(font, a2, a3, a4, a5);
+	}
+
 	void InGamePrint(const char* Text, int x, int y, int font) {
-		if (font == 2) {
+		if (font == 2 || font == 0) {
 			font = *(int*)0x00E98A90;
 		}
 		else if (font == 6) {
@@ -676,7 +686,7 @@ void __fastcall vint_sr2_render(void* thisa) {
 		std::string display_text = loaded_files_to_render + "[JUICED] These are loose files loaded during THIS loading screen.";
 		ChangeTextColor(238, 130, 238, 255);
 
-		InGamePrintASMS(6, display_text.c_str(), processtextwidth(0), 0, 0.7f);
+		InGamePrintScale(6, display_text.c_str(), processtextwidth(0), 0, 0.7f);
 	}
 }
 
