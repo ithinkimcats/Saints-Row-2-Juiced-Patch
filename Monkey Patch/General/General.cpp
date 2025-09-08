@@ -576,22 +576,6 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 
 				std::string finalContent;
 				finalContent = std::string(currentBuff, sz);
-#if !RELOADED
-				if (allowJuicedAPI) {
-					bool externallyModified = false;
-
-					for (auto& callback : g_VintluaHooksAPI) {
-						if (callback) {
-							if (callback(filename, finalContent, finalContent.length())) {
-								externallyModified = true;
-							}
-						}
-					}
-
-						modified = externallyModified;
-					
-				}
-#endif
 				std::string customCode = "";
 				// remove .lua
 				std::string cached_str = filename;
@@ -735,6 +719,23 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 						}
 					}
 				}
+
+#if !RELOADED
+				if (allowJuicedAPI) {
+					bool externallyModified = false;
+
+					for (auto& callback : g_VintluaHooksAPI) {
+						if (callback) {
+							if (callback(filename, finalContent, finalContent.length())) {
+								externallyModified = true;
+							}
+						}
+					}
+					if(externallyModified)
+					modified = externallyModified;
+
+				}
+#endif
 
 				// If any modifications were made, create a new buffer
 				if (modified) {

@@ -11,6 +11,8 @@
 #include <sstream>
 #include "../Player/Input.h"
 #include "../General/General.h"
+#include <fstream>
+#include <string>
 using namespace General;
 import OptionsManager; 
 #if !RELOADED
@@ -419,12 +421,31 @@ namespace InGameConfig {
         return currentValue;
     }
     static char* g_sliderModifiedBuffer = nullptr;
+
+    void DebugDumpLua(const std::string& buffer, const std::string& stage) {
+        // Get current module directory
+        char modulePath[MAX_PATH];
+        GetModuleFileNameA(GetModuleHandleA(nullptr), modulePath, MAX_PATH);
+        std::string moduleDir = std::string(modulePath);
+        size_t lastSlash = moduleDir.find_last_of("\\/");
+        if (lastSlash != std::string::npos) {
+            moduleDir = moduleDir.substr(0, lastSlash + 1);
+        }
+
+        std::string filename = moduleDir + "pause_menu_" + stage + ".lua";
+        std::ofstream file(filename);
+        if (file.is_open()) {
+            file << buffer;
+            file.close();
+        }
+    }
+
     bool PatchSliderContent(std::string& buffer, const char* filename) {
         // Only process pause_menu.lua
         if (strcmp(filename, "pause_menu.lua") != 0 || g_sliders.empty()) {
             return false; // Nothing to patch
         }
-
+        DebugDumpLua(buffer, "weay_before");
         // For any sliders that don't have an ID yet, assign one now
         bool needsIdAssignment = false;
         for (auto& slider : g_sliders) {
@@ -716,8 +737,14 @@ namespace InGameConfig {
             }
         }
         int MP_game_mode = *(int*)0x00E8B210;
+        bool enableCoopMultiplayerCheck = false;
 #if !RELOADED
-        if (isCoop() == false && MP_game_mode == -1) {
+        bool shouldCreateJuicedMenu = true;
+        if (enableCoopMultiplayerCheck) {
+            int MP_game_mode = *(int*)0x00E8B210;
+            shouldCreateJuicedMenu = (isCoop() == false && MP_game_mode == -1);
+        }
+        if (shouldCreateJuicedMenu) {
 #endif 
             // Find a good insertion point - look for Pause_display_menu_PC
             std::string displayMenuStr = "Pause_display_menu_PC = {";
@@ -1002,25 +1029,28 @@ namespace InGameConfig {
                 std::string format1Check = "elseif menu_format == 1 then";
                 std::string format2Check = "elseif menu_format == 2 then";
 
-                // For standard format (0) and multiplayer (2), just increase num_items
-                std::vector<std::pair<std::string, std::string>> formatChecks = {
-                    {format0Check, "Pause_options_menu.num_items = 5"},
-                    {format2Check, "Pause_options_menu.num_items = 4"}
-                };
+                std::vector<std::string> formatChecks = { format0Check, format2Check };
 
                 for (const auto& check : formatChecks) {
-                    size_t checkPos = buffer.find(check.first, initFuncPos);
+                    size_t checkPos = buffer.find(check, initFuncPos);
                     if (checkPos != std::string::npos) {
                         // Find the num_items assignment
-                        size_t assignPos = buffer.find(check.second, checkPos);
+                        std::string numItemsPattern = "Pause_options_menu.num_items = ";
+                        size_t assignPos = buffer.find(numItemsPattern, checkPos);
                         if (assignPos != std::string::npos) {
+                            // Find the end of the assignment
+                            size_t valuePos = assignPos + numItemsPattern.length();
+                            size_t valueEnd = buffer.find_first_of(" \t\n", valuePos);
+                            if (valueEnd == std::string::npos) {
+                                valueEnd = valuePos + 1; // Single digit
+                            }
+
                             // Extract current value
-                            size_t valuePos = assignPos + std::string("Pause_options_menu.num_items = ").length();
-                            std::string currentValue = buffer.substr(valuePos, 1); // Should be a single digit
+                            std::string currentValue = buffer.substr(valuePos, valueEnd - valuePos);
                             int newValue = std::stoi(currentValue) + 1;
 
                             // Replace with new value
-                            buffer.replace(valuePos, 1, std::to_string(newValue));
+                            buffer.replace(valuePos, valueEnd - valuePos, std::to_string(newValue));
                             modified = true;
                         }
                     }
@@ -1048,7 +1078,6 @@ namespace InGameConfig {
                             std::string mainMenuFix = "\n\t\t-- Set up Juiced Options in position 2 (after Display, before Audio)\n";
                             mainMenuFix += "\t\tPause_options_menu[2] = { label = \"thaRow Options\", type = MENU_ITEM_TYPE_SUB_MENU, sub_menu = Juiced_options }\n";
 #endif
-                            buffer.insert(endOfFormat1, mainMenuFix);
                             modified = true;
                         }
                     }
@@ -1072,43 +1101,36 @@ namespace InGameConfig {
                     }
                 }
 
-                // Also need to update the circular swapping logic if it exists
-                // Find lines that swap menu items
-                std::vector<std::string> swapPatterns = {
-                    "Pause_options_menu[0] = Pause_options_menu[1]",
-                    "Pause_options_menu[1] = Pause_options_menu[2]",
-                    "Pause_options_menu[2] = Pause_options_menu[3]",
-                    "Pause_options_menu[3] = Pause_options_menu[4]",
-                    "Pause_options_menu[4] = Pause_options_menu[0]"
-                };
+                // Fix the circular swapping logic
+                // Find the last swap line to understand the current pattern
+                std::string lastSwapPattern = "Pause_options_menu[4] = Pause_options_menu[0]";
+                size_t lastSwapPos = buffer.find(lastSwapPattern, initFuncPos);
 
-                // If there's a 5th line to add (for the new item)
-                bool foundSwap = false;
-                for (const auto& pattern : swapPatterns) {
-                    if (buffer.find(pattern, initFuncPos) != std::string::npos) {
-                        foundSwap = true;
-                        break;
+                if (lastSwapPos != std::string::npos) {
+                    // Find the end of this line
+                    size_t lineEnd = buffer.find("\n", lastSwapPos);
+                    if (lineEnd != std::string::npos) {
+                        // Get the indentation from the current line
+                        size_t lineStart = buffer.rfind("\n", lastSwapPos) + 1;
+                        std::string indentation = buffer.substr(lineStart, lastSwapPos - lineStart);
+
+                        // Remove any existing array indices from the indentation
+                        size_t indentEnd = indentation.find("Pause_options_menu");
+                        if (indentEnd != std::string::npos) {
+                            indentation = indentation.substr(0, indentEnd);
+                        }
+
+                        // Add the new swap line for the additional menu item
+                        buffer.replace(lastSwapPos, lastSwapPattern.length(), "Pause_options_menu[4] = Pause_options_menu[5]");
+                        modified = true;
                     }
                 }
-
-                if (foundSwap) {
-                    // Find the last swap line
-                    size_t lastSwapPos = buffer.find("Pause_options_menu[4] = Pause_options_menu[0]", initFuncPos);
-                    if (lastSwapPos != std::string::npos) {
-                        // Find the end of this line
-                        size_t lineEnd = buffer.find("\n", lastSwapPos);
-                        if (lineEnd != std::string::npos) {
-                            // Add a new swap line for index 5
-                            std::string newSwapLine = "\n\tPause_options_menu[5] = Pause_options_menu[1]";
-                            buffer.insert(lineEnd, newSwapLine);
-                            modified = true;
-                        }
-                    }
                 }
             }
-#if !RELOADED
-        }
-#endif
+
+
+        
+            DebugDumpLua(buffer, "after");
         return modified;
     }
 }
