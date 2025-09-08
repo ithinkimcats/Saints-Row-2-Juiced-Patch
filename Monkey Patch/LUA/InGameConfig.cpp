@@ -737,7 +737,7 @@ namespace InGameConfig {
             }
         }
         int MP_game_mode = *(int*)0x00E8B210;
-        bool enableCoopMultiplayerCheck = false;
+        bool enableCoopMultiplayerCheck = (GameConfig::GetValue("Debug","PopulateInGameOptions",1) >= 2);
 #if !RELOADED
         bool shouldCreateJuicedMenu = true;
         if (enableCoopMultiplayerCheck) {
