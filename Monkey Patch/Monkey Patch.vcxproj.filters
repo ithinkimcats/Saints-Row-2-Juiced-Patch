@@ -173,18 +173,6 @@
     <ClCompile Include="General\JuicedAPI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Render\d3d9_hook.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Shadows.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UGC\thaRow\packfile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UGC\thaRow\Reloaded.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DFEngine.h">
@@ -340,23 +328,8 @@
     <ClInclude Include="General\JuicedAPI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Render\d3d9_hook.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Shadows.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UGC\thaRow\packfile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UGC\thaRow\Reloaded.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Properties.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\juiced.ini" />
   </ItemGroup>
 </Project>
