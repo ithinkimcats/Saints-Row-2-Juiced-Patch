@@ -1,4 +1,4 @@
-#include "InGameConfig.h"
+﻿#include "InGameConfig.h"
 #include "..\Render\Render3D.h"
 #include "..\Render\Render2D.h"
 #include <unordered_set>
@@ -1024,113 +1024,142 @@ namespace InGameConfig {
             std::string initFunc = "function pause_menu_option_menu_init(menu_format)";
             size_t initFuncPos = buffer.find(initFunc);
             if (initFuncPos != std::string::npos) {
-                // Find the menu_format checks
-                std::string format0Check = "if menu_format == 0 then";
-                std::string format1Check = "elseif menu_format == 1 then";
-                std::string format2Check = "elseif menu_format == 2 then";
 
-                std::vector<std::string> formatChecks = { format0Check, format2Check };
+                // Find the end of the function
+                size_t funcEndPos = buffer.find("\nend", initFuncPos);
+                if (funcEndPos == std::string::npos) {
+                    funcEndPos = buffer.find("\n}", initFuncPos);
+                }
 
-                for (const auto& check : formatChecks) {
-                    size_t checkPos = buffer.find(check, initFuncPos);
-                    if (checkPos != std::string::npos) {
-                        // Find the num_items assignment
-                        std::string numItemsPattern = "Pause_options_menu.num_items = ";
-                        size_t assignPos = buffer.find(numItemsPattern, checkPos);
-                        if (assignPos != std::string::npos) {
-                            // Find the end of the assignment
-                            size_t valuePos = assignPos + numItemsPattern.length();
-                            size_t valueEnd = buffer.find_first_of(" \t\n", valuePos);
-                            if (valueEnd == std::string::npos) {
-                                valueEnd = valuePos + 1; // Single digit
+                std::string funcContent = buffer.substr(initFuncPos, funcEndPos - initFuncPos);
+
+                // Detect if this is vanilla (has circular swap) or modded (has format-specific assignments)
+                bool isVanilla = (funcContent.find("--Circularly swap the menu items") != std::string::npos ||
+                    funcContent.find("Pause_options_menu[4] = Pause_options_menu[0]") != std::string::npos);
+
+                if (isVanilla) {
+                    // VANILLA PATH: Handle circular swap logic
+
+                    // 1. Find and increment all num_items
+                    std::string numItemsPattern = "Pause_options_menu.num_items = ";
+                    size_t searchPos = initFuncPos;
+
+                    while (searchPos < funcEndPos) {
+                        size_t assignPos = buffer.find(numItemsPattern, searchPos);
+                        if (assignPos == std::string::npos || assignPos >= funcEndPos) break;
+
+                        size_t valuePos = assignPos + numItemsPattern.length();
+                        size_t valueEnd = buffer.find_first_of(" \t\n", valuePos);
+                        if (valueEnd == std::string::npos) valueEnd = valuePos + 1;
+
+                        std::string currentValue = buffer.substr(valuePos, valueEnd - valuePos);
+                        int newValue = std::stoi(currentValue) + 1;
+                        buffer.replace(valuePos, valueEnd - valuePos, std::to_string(newValue));
+                        modified = true;
+
+                        searchPos = valuePos + std::to_string(newValue).length();
+                    }
+
+                    // 2. Fix the circular swap - replace [4] = [0] with [4] = [5]
+                    std::string oldSwap = "Pause_options_menu[4] = Pause_options_menu[0]";
+                    std::string newSwap = "Pause_options_menu[4] = Pause_options_menu[5]";
+                    size_t swapPos = buffer.find(oldSwap, initFuncPos);
+                    if (swapPos != std::string::npos && swapPos < funcEndPos) {
+                        buffer.replace(swapPos, oldSwap.length(), newSwap);
+                        modified = true;
+                    }
+
+                }
+                else {
+                    // MODDED PATH: Much simpler approach
+
+                    // 1. Increment all num_items
+                    std::string numItemsPattern = "Pause_options_menu.num_items = ";
+                    size_t searchPos = initFuncPos;
+
+                    while (searchPos < funcEndPos) {
+                        size_t assignPos = buffer.find(numItemsPattern, searchPos);
+                        if (assignPos == std::string::npos || assignPos >= funcEndPos) break;
+
+                        size_t valuePos = assignPos + numItemsPattern.length();
+                        size_t valueEnd = buffer.find_first_of(" \t\n", valuePos);
+                        if (valueEnd == std::string::npos) valueEnd = valuePos + 1;
+
+
+                        bool isFormat1 = (buffer.rfind("if menu_format == 1", assignPos) > buffer.rfind("elseif", assignPos));
+
+                        std::string currentValue = buffer.substr(valuePos, valueEnd - valuePos);
+                        int newValue;
+
+                        if (isFormat1) {
+                            newValue = std::stoi(currentValue) + 1;  // Increment for format 1
+                        }
+                        else {
+                            newValue = std::stoi(currentValue);      // No change for formats 2 & 3
+                        }
+
+                        buffer.replace(valuePos, valueEnd - valuePos, std::to_string(newValue));
+                        modified = true;
+
+                        searchPos = valuePos + std::to_string(newValue).length();
+                    }
+
+                    // 2. For each format block, add the Juiced assignment at the RIGHT target index
+                    std::vector<std::string> formats = { "if menu_format == 1", "elseif menu_format == 2", "elseif menu_format == 3" };
+
+                    for (const auto& format : formats) {
+                        size_t formatPos = buffer.find(format, initFuncPos);
+                        if (formatPos != std::string::npos && formatPos < funcEndPos) {
+
+                            // Find num_items line to insert before it
+                            size_t numItemsPos = buffer.find("Pause_options_menu.num_items = ", formatPos);
+                            if (numItemsPos != std::string::npos && numItemsPos < funcEndPos) {
+
+                                // Count existing assignments in this block to determine next target index
+                                int targetIndex = 0;
+                                size_t assignSearchPos = formatPos;
+                                std::regex assignRegex(R"(Pause_options_menu\[(\d+)\]\s*=)");
+                                std::string blockText = buffer.substr(formatPos, numItemsPos - formatPos);
+
+                                std::smatch match;
+                                auto searchStart = blockText.cbegin();
+                                while (std::regex_search(searchStart, blockText.cend(), match, assignRegex)) {
+                                    targetIndex = max(targetIndex, std::stoi(match[1].str()) + 1);
+                                    searchStart = match.suffix().first;
+                                }
+
+                                // Insert Juiced assignment
+                                // Find the last assignment line in this block
+                                size_t lastAssignPos = numItemsPos;
+                                while (lastAssignPos > formatPos) {
+                                    lastAssignPos--;
+                                    if (buffer.substr(lastAssignPos, 20).find("Pause_options_menu[") == 0) {
+                                        break;
+                                    }
+                                }
+
+                                // Find the end of that line
+                                size_t lineEnd = buffer.find("\n", lastAssignPos);
+                                if (lineEnd != std::string::npos) {
+                                    // Get proper indentation (same as other assignments)
+                                    size_t lineStart = buffer.rfind("\n", lastAssignPos) + 1;
+                                    std::string indentation = "\t\t"; // Use consistent indentation
+
+                                    std::string juicedLine = "\n" + indentation + "Pause_options_menu[" +
+                                        std::to_string(targetIndex) + "] = Pause_options_menu[8]\t-- Juiced";
+                                    buffer.insert(lineEnd, juicedLine);
+                                    modified = true;
+                                }
                             }
-
-                            // Extract current value
-                            std::string currentValue = buffer.substr(valuePos, valueEnd - valuePos);
-                            int newValue = std::stoi(currentValue) + 1;
-
-                            // Replace with new value
-                            buffer.replace(valuePos, valueEnd - valuePos, std::to_string(newValue));
-                            modified = true;
                         }
                     }
                 }
-
-                size_t format1Pos = buffer.find(format1Check, initFuncPos);
-                if (format1Pos != std::string::npos) {
-                    // Find the num_items assignment for format 1
-                    std::string format1NumItems = "Pause_options_menu.num_items = 3";
-                    size_t assignPos = buffer.find(format1NumItems, format1Pos);
-                    if (assignPos != std::string::npos) {
-                        // Increase num_items by 1 (from 3 to 4)
-                        size_t valuePos = assignPos + std::string("Pause_options_menu.num_items = ").length();
-                        buffer.replace(valuePos, 1, "4");
-                        modified = true;
-
-                        // We need to insert additional code to properly arrange the main menu options
-                        size_t endOfFormat1 = buffer.find("end", format1Pos);
-                        if (endOfFormat1 != std::string::npos) {
-                            // Insert code to set up the menu items correctly for format 1
-#if !RELOADED
-                            std::string mainMenuFix = "\n\t\t-- Set up Juiced Options in position 2 (after Display, before Audio)\n";
-                            mainMenuFix += "\t\tPause_options_menu[2] = { label = \"Juiced Options\", type = MENU_ITEM_TYPE_SUB_MENU, sub_menu = Juiced_options }\n";
-#else 
-                            std::string mainMenuFix = "\n\t\t-- Set up Juiced Options in position 2 (after Display, before Audio)\n";
-                            mainMenuFix += "\t\tPause_options_menu[2] = { label = \"thaRow Options\", type = MENU_ITEM_TYPE_SUB_MENU, sub_menu = Juiced_options }\n";
-#endif
-                            modified = true;
-                        }
-                    }
-                }
-
-                // Find Pause_options_menu[2] = Pause_options_menu[7] and add the new line below it
-                std::string targetLine = "Pause_options_menu[2] = Pause_options_menu[7]";
-                size_t targetLinePos = buffer.find(targetLine, initFuncPos);
-                if (targetLinePos != std::string::npos) {
-                    size_t lineEndPos = buffer.find('\n', targetLinePos);
-                    if (lineEndPos != std::string::npos) {
-                        size_t indentStart = targetLinePos;
-                        while (indentStart > 0 && (buffer[indentStart - 1] == ' ' || buffer[indentStart - 1] == '\t')) {
-                            indentStart--;
-                        }
-                        std::string indentation = buffer.substr(indentStart, targetLinePos - indentStart);
-                        std::string newLine = "\n" + indentation + "Pause_options_menu[3] = Pause_options_menu[8]";
-
-                        buffer.insert(lineEndPos, newLine);
-                        modified = true;
-                    }
-                }
-
-                // Fix the circular swapping logic
-                // Find the last swap line to understand the current pattern
-                std::string lastSwapPattern = "Pause_options_menu[4] = Pause_options_menu[0]";
-                size_t lastSwapPos = buffer.find(lastSwapPattern, initFuncPos);
-
-                if (lastSwapPos != std::string::npos) {
-                    // Find the end of this line
-                    size_t lineEnd = buffer.find("\n", lastSwapPos);
-                    if (lineEnd != std::string::npos) {
-                        // Get the indentation from the current line
-                        size_t lineStart = buffer.rfind("\n", lastSwapPos) + 1;
-                        std::string indentation = buffer.substr(lineStart, lastSwapPos - lineStart);
-
-                        // Remove any existing array indices from the indentation
-                        size_t indentEnd = indentation.find("Pause_options_menu");
-                        if (indentEnd != std::string::npos) {
-                            indentation = indentation.substr(0, indentEnd);
-                        }
-
-                        // Add the new swap line for the additional menu item
-                        buffer.replace(lastSwapPos, lastSwapPattern.length(), "Pause_options_menu[4] = Pause_options_menu[5]");
-                        modified = true;
-                    }
-                }
-                }
+            }
             }
 
 
         
-            DebugDumpLua(buffer, "after");
+            //DebugDumpLua(buffer, "after");
         return modified;
     }
 }
