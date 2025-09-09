@@ -314,8 +314,56 @@ CMultiPatch CMPatches_SR1Reloading = {
 			(void)LessCameraVehicleFollow.disable();
 		GameConfig::SetDoubleValue("Gameplay", "vehicle_camera_follow_modifier", vehicle_camera_follow_modifier);
 	}
+
+	void __fastcall vehicle_get_velocity(void* vehicle, vector3* velocity, uint32_t sub_object_id = -1) {
+		((vector3*(__thiscall*)(void*,vector3*,uint32_t))0xAA5150)(vehicle,velocity,sub_object_id);
+	}
+
+	inline double __fastcall vehicle_get_brake_value(void* a1, void* a2) {
+		return ((double(__fastcall*)(void*, void*))0xAA64A0)(a1, a2);
+	}
+
+	double __declspec(naked) vehicle_get_accelerator_value(int vehicle_handle) {
+		static uintptr_t vehicle_get_accelerator_value_addr = 0xAA63A0;
+		__asm {
+			push ebp
+			mov ebp, esp
+			sub esp, __LOCAL_SIZE
+
+
+			mov eax, vehicle_handle
+			call vehicle_get_accelerator_value_addr
+
+			mov esp, ebp
+			pop ebp
+			ret
+		}
+	}
+
+	bool getVehicleType(uintptr_t vehicle_pointer, int type) {
+		if (vehicle_pointer == NULL)
+			return false;
+
+		uintptr_t first_ptr = *(uintptr_t*)(vehicle_pointer + 0x84E4);
+		if (first_ptr == NULL)
+			return false;
+
+		return *(uintptr_t*)(first_ptr + 0x9C) == type;
+	}
+
+	double __fastcall vehicle_brakelight_fix(void* a1, uintptr_t a2) {
+		vector3 vehicle_vel{};
+		vehicle_get_velocity((void*)a2, &vehicle_vel);
+		if (getVehicleType(a2,0) && vehicle_vel.magnitudeSquared() < 0.005 && vehicle_get_accelerator_value(*(int*)(a2 + 0x44)) == 0.0)
+			return 0.3;
+		else
+			return vehicle_get_brake_value(a1, (void*)a2);
+	}
+
 	void Init()
 	{
+		if(GameConfig::GetValue("Graphics","ProperBrakeLights",1) != 0)
+		patchCall((void*)0xAD5C29, vehicle_brakelight_fix);
 		if (GameConfig::GetValue("Gameplay", "DisableSprintCamShake", 0)) {
 			Logger::TypedLog(CHN_DEBUG, "DisableSprintCamShake..\n");
 			CDisableSprintCamShake.Apply();
