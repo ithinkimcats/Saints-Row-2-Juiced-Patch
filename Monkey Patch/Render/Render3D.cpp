@@ -911,5 +911,9 @@ namespace Render3D
 		{
 			Render3D::FasterLoading();
 		}
+
+		if (GameConfig::GetValue("Graphics", "FixGlares", 1)) {
+			patchByte((void*)0x004AFBA2, 0xEB);
+		}
 	}
 }
