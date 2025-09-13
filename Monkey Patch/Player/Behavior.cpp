@@ -360,8 +360,22 @@ CMultiPatch CMPatches_SR1Reloading = {
 			return vehicle_get_brake_value(a1, (void*)a2);
 	}
 
+	inline void camera_switch_to_vehicle(uintptr_t player, uintptr_t vehicle,bool tp) {
+		((void(__cdecl*)(uintptr_t player, uintptr_t vehicle, bool tp))0xB19F40)(player,vehicle, tp);
+	}
+
 	void Init()
 	{
+		if (GameConfig::GetValue("Gameplay", "SR1VehicleCameraTransition", 0) != 0) {
+			patchNop((void*)0xB0CB81, 5);
+			static auto veh_enter_test = safetyhook::create_mid(0xB0ECBD, [](SafetyHookContext& ctx) {
+				uintptr_t vehicle = *(uintptr_t*)(ctx.esp + 0x34);
+				uintptr_t human = *(uintptr_t*)(ctx.esp + 0x38);
+				if (human && vehicle && human == UtilsGlobal::getplayer()) {
+					camera_switch_to_vehicle(human, vehicle, false);
+				}
+				});
+		}
 		if(GameConfig::GetValue("Graphics","ProperBrakeLights",1) != 0)
 		patchCall((void*)0xAD5C29, vehicle_brakelight_fix);
 		if (GameConfig::GetValue("Gameplay", "DisableSprintCamShake", 0)) {
