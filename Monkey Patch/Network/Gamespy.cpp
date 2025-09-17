@@ -8,6 +8,7 @@
 #include "../SafeWrite.h"
 #include "Gamespy.h"
 #include "../UtilsGlobal.h"
+#include "STUNNat.h"
 
 namespace Gamespy
 {
@@ -41,6 +42,17 @@ namespace Gamespy
 
 	void Init() {
 		coopPausePatch = 0;
+
+		// Check basic NAT type on port 4200
+		std::string publicIp;
+		int publicPort = 0;
+		int localPort = 4200;  // Change to whatever port you want to test
+
+		std::string natType = detectNatType(localPort, publicIp, publicPort);
+		UtilsGlobal::mynat_type = natType;
+		Logger::TypedLog(CHN_NET, "%s\n", UtilsGlobal::mynat_type);
+		// ----
+
 		if (GameConfig::GetValue("Multiplayer", "FixNetworkBinding", 1))
 		{
 			Logger::TypedLog(CHN_NET, "Fixing Network Adapter Binding...\n");

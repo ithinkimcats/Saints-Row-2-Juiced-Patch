@@ -66,6 +66,8 @@ inline const char* juicedversion = "7.9.5";
 inline const char* thaRowmenuversion = "0.0.1";
 inline const char* thaRowversion = "%s - thaRow 0.1beta";
 
+inline std::string mynat_type;
+
 inline char* lobby_list[2] = {
         const_cast<char*>("sr2_mp_lobby02"),
         const_cast<char*>("sr2_mp_lobby03")

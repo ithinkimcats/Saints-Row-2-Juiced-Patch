@@ -335,6 +335,13 @@ int processtextwidth(int width) {
 			__asm pushad
 			InGamePrint((JuicedText + std::string(UtilsGlobal::juicedversion)).c_str(), y, x, 2);
 			__asm popad
+
+			if (*(BYTE*)0x02529334 == 4) {
+				ChangeTextColor(160, 160, 160, 128);
+				__asm pushad
+				InGamePrint(UtilsGlobal::mynat_type.c_str(), y + 15, Render2D::processtextwidth(10), 6);
+				__asm popad
+			}
 		}
 #else
 		if (*(BYTE*)0xE8D56B == 1) {
