@@ -332,6 +332,12 @@ int processtextwidth(int width) {
 			}
 
 			ChangeTextColor(160, 160, 160, 128);
+
+#ifdef GITHUB_ACTIONS
+			__asm pushad
+			InGamePrint(("NIGHTLY " + UtilsGlobal::getShortCommitHash()).c_str(),35, 0, 6);
+			__asm popad
+#endif
 			__asm pushad
 			InGamePrint((JuicedText + std::string(UtilsGlobal::juicedversion)).c_str(), y, x, 2);
 			__asm popad
