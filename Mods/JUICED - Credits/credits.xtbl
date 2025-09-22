@@ -42,7 +42,7 @@
 						</items>
 						<items>
 							<name>Tervel</name>
-							<desc>Juiced Patch</desc>
+							<desc>Juiced Patch, SR2 PC DLC Project</desc>
 						</items>
 						<items>
 							<name>Clippy95</name>
@@ -68,6 +68,10 @@
 					<heading>SPECIAL THANKS</heading>
 					<type>Name - Role</type>
 					<items>
+					    <items>
+							<name>Dropoff</name>
+							<desc>SR2 PC DLC Project - Asset Porting</desc>
+						</items>
 						<items>
 							<name>Joshua Macdonald</name>
 							<desc>xDelta3</desc>
@@ -107,6 +111,10 @@
 						<items>
 							<name>cats</name>
 							<desc>Tha Row Logo</desc>
+						</items>
+						<items>
+							<name>miru97</name>
+							<desc>Shader Assistance</desc>
 						</items>
 						<items>
 						</items>
