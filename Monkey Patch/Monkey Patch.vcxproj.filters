@@ -346,6 +346,9 @@
     <ClInclude Include="Network\STUNNat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Hooker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Properties.rc" />
