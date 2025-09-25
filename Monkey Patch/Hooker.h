@@ -12,21 +12,26 @@
 //	return (ptrdiff_t)GetModuleHandle(nullptr) - 0x400000 + address;
 //#endif
 //}
-
+static auto HandleDynAddress = GetModuleHandle(nullptr);
 template<typename AT>
 __declspec(noinline) AT DynAddress(AT address)
 {
     static_assert(sizeof(AT) == sizeof(uintptr_t), "AT must be pointer sized");
-    static auto Handle = GetModuleHandle(nullptr);
 
-    uintptr_t baseAddr = std::bit_cast<uintptr_t>(Handle);
     uintptr_t inputAddr = std::bit_cast<uintptr_t>(address);
 
-#ifdef _WIN64
-    uintptr_t result = baseAddr - 0x140000000ULL + inputAddr;
-#else
-    uintptr_t result = baseAddr - 0x400000UL + inputAddr;
-#endif
+    // This is SR2 exe range, this function should only be really used for the mass conversion of older functions, and from now on we have to rely on MemoryMgr.h from ModUtils -- Clippy95
+    if (inputAddr >= 0x00400000ULL && inputAddr <= 0x03559000ULL) {
+        uintptr_t baseAddr = std::bit_cast<uintptr_t>(HandleDynAddress);
 
-    return std::bit_cast<AT>(result);
+#ifdef _WIN64
+        uintptr_t result = baseAddr - 0x140000000ULL + inputAddr;
+#else
+        uintptr_t result = baseAddr - 0x400000UL + inputAddr;
+#endif
+        return std::bit_cast<AT>(result);
+    }
+
+    // Return the original address if it's outside the range
+    return address;
 }
