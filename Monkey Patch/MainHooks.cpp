@@ -163,6 +163,33 @@ void __cdecl WelcomeCallback(int Unk, int SelectedOption, int Action) {
 	}
 }
 
+std::string getCPUName() {
+	int cpuInfo[4] = { -1 };
+	char cpuBrandString[0x40]; // 64 bytes
+	memset(cpuBrandString, 0, sizeof(cpuBrandString));
+
+	// Get highest extended function supported
+	__cpuid(cpuInfo, 0x80000000);
+	unsigned int nExIds = cpuInfo[0];
+
+	if (nExIds >= 0x80000004) {
+		__cpuid(cpuInfo, 0x80000002);
+		memcpy(cpuBrandString, cpuInfo, sizeof(cpuInfo));
+
+		__cpuid(cpuInfo, 0x80000003);
+		memcpy(cpuBrandString + 16, cpuInfo, sizeof(cpuInfo));
+
+		__cpuid(cpuInfo, 0x80000004);
+		memcpy(cpuBrandString + 32, cpuInfo, sizeof(cpuInfo));
+	}
+
+	return std::string(cpuBrandString);
+}
+
+#include <d3d9.h>
+#pragma comment(lib, "d3d9.lib")
+
+
 BOOL __stdcall Hook_GetVersionExA(LPOSVERSIONINFOA lpVersionInformation)
 {
     char timeString[200];
@@ -192,10 +219,31 @@ BOOL __stdcall Hook_GetVersionExA(LPOSVERSIONINFOA lpVersionInformation)
 #else
 	Logger::TypedLog(CHN_DLL, " --- Welcome to thaRow ---\n");
 #endif
+	std::string cpu = getCPUName();
 	Logger::TypedLog(CHN_DLL, "RUNNING DIRECTORY: %s\n", &executableDirectory);
 	Logger::TypedLog(CHN_DLL, "LOG FILE CREATED: %s\n", &timeString);
-	Logger::TypedLog(CHN_DLL, "--- DLL Based on MonkeyPatch by scanti, additional work by Uzis, Tervel, jason098 and Clippy95. ---\n");
-	
+	Logger::TypedLog(CHN_DLL, "--- DLL Based on MonkeyPatch by scanti, additional work by Uzis, Tervel, jason098 and Clippy95. ---\n\n");
+
+	// ~~~ SPECS ~~~
+	Logger::TypedLog(CHN_DLL, "--- Specs: ---\nCPU: %s\n", cpu);
+	IDirect3D9* d3d = Direct3DCreate9(D3D_SDK_VERSION);
+	if (!d3d) {
+		Logger::TypedLog(CHN_DLL, "GPU: Direct3DCreate9 failed (DirectX 9 runtime missing?)\n\n");
+	}
+
+	D3DADAPTER_IDENTIFIER9 identifier;
+	ZeroMemory(&identifier, sizeof(identifier));
+
+	HRESULT hr = d3d->GetAdapterIdentifier(D3DADAPTER_DEFAULT, 0, &identifier);
+	d3d->Release();
+
+	if (FAILED(hr)) {
+		Logger::TypedLog(CHN_DLL, "GPU: GetAdapterIdentifier failed\n\n");
+	}
+
+	Logger::TypedLog(CHN_DLL, "GPU: %s\n\n", identifier.Description);
+	// ~~~~~~~~~~~~~
+
 	if(GetVersionExAFirstRun)
 	{
 		GetVersionExAFirstRun=false;
