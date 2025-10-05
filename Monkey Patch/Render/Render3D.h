@@ -43,5 +43,6 @@ namespace Render3D
     extern int SHADER_LOD;
     extern float SHADER_DISTANCE_SQUARED_MULT;
     extern SafetyHookMid screen_3d_to_2d_midhook;
-
+    extern bool use_old;
+    extern void apply_old();
 }

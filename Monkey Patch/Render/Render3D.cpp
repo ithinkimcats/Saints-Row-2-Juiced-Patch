@@ -23,6 +23,7 @@
 #include "../Game/CrashFixes.h"
 #include "../LUA/InGameConfig.h"
 #include "Shadows.h"
+#include "..\Hooker.h"
 import OptionsManager; 
 
 namespace Render3D
@@ -144,17 +145,17 @@ namespace Render3D
 	}
 	CMultiPatch CMPatches_PatchLowSleepHack = {
 
-		[](CMultiPatch& mp) {
-			mp.AddPatchNop(0x0052108C,3);
-		},
+		//[](CMultiPatch& mp) {
+		//	mp.AddPatchNop(0x0052108C,3);
+		//},
 
-		[](CMultiPatch& mp) {
-			mp.AddSafeWriteBuf(0x00521FC0, "\x6A\x00", 2);
-		},
+		//[](CMultiPatch& mp) {
+		//	mp.AddSafeWriteBuf(0x00521FC0, "\x6A\x00", 2);
+		//},
 
-		[](CMultiPatch& mp) {
-			mp.AddSafeWriteBuf(0x00521FE5, "\x6A\x00", 2);
-		},
+		//[](CMultiPatch& mp) {
+		//	mp.AddSafeWriteBuf(0x00521FE5, "\x6A\x00", 2);
+		//},
 
 		[](CMultiPatch& mp) {
 			mp.AddSafeWriteBuf(0x005285A2, "\x6A\x00", 2);
@@ -162,6 +163,8 @@ namespace Render3D
 	};
 	void PatchLowSleepHack()
 	{
+		if (GameConfig::GetValue("Debug", "FixPerformance", 1) != 0)
+			return;
 		// Woohoo, this is a dirty patch, but we'll include it for people who want it and CAN actually run it.
 		// This will destroy older and weaker pcs, but we'll make sure to let the people who are on that, know that.
 
@@ -169,10 +172,10 @@ namespace Render3D
 
 		Logger::TypedLog(CHN_DLL, "Removing a Very Safe Amount of Sleep Calls...\n");
 		//patchNop((BYTE*)0x0052108C, 3); // patch win main sleep call
-		/*patchBytesM((BYTE*)0x00521FC0, (BYTE*)"\x6A\x00", 2); // wait call in a threaded function, i think
+		patchBytesM((BYTE*)0x00521FC0, (BYTE*)"\x6A\x00", 2); // wait call in a threaded function, i think
 		patchBytesM((BYTE*)0x00521FE5, (BYTE*)"\x6A\x00", 2); // same with this one
-		patchBytesM((BYTE*)0x005285A2, (BYTE*)"\x6A\x00", 2); // this ones a doozy, this is some weird threaded exchange function, for each something, sleep. */
-		CMPatches_PatchLowSleepHack.Apply();
+		patchBytesM((BYTE*)0x005285A2, (BYTE*)"\x6A\x00", 2); // this ones a doozy, this is some weird threaded exchange function, for each something, sleep. 
+		//CMPatches_PatchLowSleepHack.Apply();
 	}
 	CPatch CPatches_MediumSleepHack = CPatch::SafeWriteBuf(0x0052847C, "\x6A\x00", 2);
 	void PatchMediumSleepHack()
@@ -183,7 +186,7 @@ namespace Render3D
 		patchBytesM((BYTE*)0x005285A2, (BYTE*)"\x6A\x00", 2); // this ones a doozy, this is some weird threaded exchange function, for each something, sleep. 
 		patchBytesM((BYTE*)0x0052847C, (BYTE*)"\x6A\x00", 2); //make the shadow pool less sleepy*/
 			
-		CMPatches_PatchLowSleepHack.Apply();
+		//CMPatches_PatchLowSleepHack.Apply();
 
 		CPatches_MediumSleepHack.Apply();
 	}
@@ -743,6 +746,76 @@ namespace Render3D
 		ctx.ebx = (ctx.ebx & 0xFFFFFF00) | (val & 0xFF);
 	}
 	SafetyHookMid screen_3d_to_2d_midhook;
+
+	bool& rendered_second_this_frame = *(bool*)DynAddress(0x0252737E);
+
+	HANDLE render_handshake_event;
+	HANDLE render_frame_event;
+
+	void signal_handshake_done() {
+		SetEvent(render_handshake_event);
+	}
+
+	void signal_frame_done() {
+		SetEvent(render_frame_event);
+	}
+	unsigned char oldbytes[0x48];
+	unsigned char newbytes[0x48];
+	bool use_old = false;
+	void apply_old() {
+		if (use_old) {
+			SafeWriteBuf((uint32_t)0x00521FAB, oldbytes, 0x48);
+		} else
+			SafeWriteBuf((uint32_t)0x00521FAB, newbytes, 0x48);
+
+
+	}
+
+	BOOL __cdecl sub_522D00_signal_frame_done() {
+		signal_frame_done();
+
+		static auto sub_522D00_addr = DynAddress(0x522D00);
+		return ((bool(__cdecl*)(void))sub_522D00_addr)();
+
+	}
+
+	
+	unsigned int* __fastcall debug_metrics_start_signal_handshake_done(char* metric_name,void* unused ,int* metric_handle) {
+		signal_handshake_done();
+
+		static auto debug_metrics_start_addr = DynAddress(0xC0BE10);
+		return ((unsigned int* (__thiscall*)(char*, int*))debug_metrics_start_addr)(metric_name,metric_handle);
+	}
+
+	void sync_handhake_render() {
+		if (GameConfig::GetValue("Debug", "FixPerformance", 1) == 0) {
+			return;
+		}
+		SafeWrite8(0x005285A3, 0);
+		render_handshake_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+		render_frame_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+		memcpy(oldbytes, (void*)0x00521FAB, 0x48);
+		oldbytes[0x16] = 0;
+		oldbytes[0x3B] = 0;
+
+		patchNop((void*)0x00521FAB, 0x48);
+
+		patchCall((void*)0x522865, debug_metrics_start_signal_handshake_done);
+
+		patchCall((void*)0x522A05, sub_522D00_signal_frame_done);
+
+		static auto sync_hack = safetyhook::create_mid(0x00521FAB, [](SafetyHookContext& ctx) {
+
+			WaitForSingleObject(render_handshake_event, INFINITE);
+
+			if (!rendered_second_this_frame) {
+				WaitForSingleObject(render_frame_event, INFINITE);
+			}
+			});
+		memcpy(newbytes, (void*)0x00521FAB, 0x48);
+
+	}
+
 	void Init()
 	{
 		Shadows::Init();
@@ -891,13 +964,15 @@ namespace Render3D
 			Render3D::UncapFPS();
 		}
 
-		// Removes all necessary sleep calls in the game, doubles fps and mitigates stutter, tanks CPU usage.
+		sync_handhake_render();
+
+		// THIS IS KEPT IN JUICED AS IS, DEPRECATED!!!! SEE AND SHOULD USE sync_handhake_render() -- Clippy95
 		if (GameConfig::GetValue("Debug", "SleepHack", 2) == 1) // LOW patch
 		{
 			Render3D::PatchLowSleepHack();
 		}
 
-		if (GameConfig::GetValue("Debug", "SleepHack", 2) == 2) // MEDIUM patch
+		if (GameConfig::GetValue("Debug", "SleepHack", 2) == 2)
 		{
 			Render3D::PatchMediumSleepHack();
 		}

@@ -291,7 +291,7 @@ namespace BlingMenuInstall
 
    void AddOptions() {
        if (BlingMenuLoad()) {
-       BlingMenuAddFuncCustom("Juiced", "SleepHack", NULL, &BM_SleepHacks, NULL);
+       //BlingMenuAddFuncCustom("Juiced", "SleepHack", NULL, &BM_SleepHacks, NULL);
        BlingMenuAddBool("Juiced", "Fix Havok Frametime",&Debug::fixFrametime, BM_restoreHavok);
        BlingMenuAddFuncCustom("Juiced", "FixFrametimeVehicleSkids",NULL ,&BM_FixFrametimeVehicleSkids, NULL);
        BlingMenuAddFuncCustom("Juiced", "Uncap FPS", NULL, &BM_UncapFPS, NULL);
@@ -409,6 +409,7 @@ namespace BlingMenuInstall
        BlingMenuAddInt("Juiced Debug", "Use PS3 Prompts", &Input::usePS3Prompts, NULL, 1, 0, 1);
        //BlingMenuAddInt8("Juiced Debug", "Fix mouse water", &Math::Fixes::FixWater, NULL,1,0,2);
        //BlingMenuAddBool("Juiced Debug", "Simulate mouse water", &Math::Fixes::SimulateWaterBug, NULL);
+       BlingMenuAddBool("Juiced Debug", "old sleep hack 1", &Render3D::use_old, Render3D::apply_old);
        }
     }
 }

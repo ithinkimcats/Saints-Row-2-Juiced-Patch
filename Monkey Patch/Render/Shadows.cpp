@@ -220,7 +220,7 @@ void ShutdownShadowWorkers()
 
 namespace Shadows {
     void Init() {
-        if (GameConfig::GetValue("Debug", "sync_shadows_threads", 1)) {
+        if (GameConfig::GetValue("Debug", "sync_shadows_threads", 1) || GameConfig::GetValue("Debug", "FixPerformance", 1) >= 2) {
             InitializeShadowWorkerSync();
             SafeWrite32((0x00528539 + 1), (uint32_t)&shadow_job_thread);
             static auto add_shadow_job = safetyhook::create_mid(0x5285E2, [](SafetyHookContext& ctx) {

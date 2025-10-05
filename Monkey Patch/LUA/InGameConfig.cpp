@@ -69,7 +69,6 @@ namespace InGameConfig {
     };
     void AddOptions() {
         Input::EnableDynamicPrompts = GameConfig::GetValue("Input", "EnableDynamicPrompts", 2);
-        InGameConfig::RegisterSlider("SleepHack", "Sleep Hack", { "CONTROL_NO","QUALITY_LOW_TEXT","QUALITY_MEDIUM_TEXT" });
         InGameConfig::RegisterBoolSlider("UncapFPS", "UncapFPS");
         InGameConfig::RegisterBoolSlider("X360Gamma", "Xbox 360 Gamma");
         InGameConfig::RegisterBoolSlider("X360GammaUI", "Xbox 360 Gamma on UI");
