@@ -667,9 +667,16 @@ namespace Render3D
 	};
 #endif
 	shaderOptions ShaderOptions;
-	 
+	
+
+	void SetPSConstF(UINT reg, const float* data, UINT count = 1)
+	{
+		IDirect3DDevice9* pDevice = *reinterpret_cast<IDirect3DDevice9**>(reinterpret_cast<void*>(DynAddress(0x0252A2D0)));
+		if (pDevice)
+			pDevice->SetPixelShaderConstantF(reg, data, count);
+	}
+
 	void ChangeShaderOptions() {
-		IDirect3DDevice9* pDevice = *reinterpret_cast<IDirect3DDevice9**>(0x0252A2D0);
 		float arr4[4];
 		arr4[0] = (ShaderOptions.X360Gamma) != 0 ? 0.0f : 1.0f;
 		arr4[1] = (ShaderOptions.ShadowFilter) != 0 ? 0.0f : 1.0f;
@@ -677,10 +684,8 @@ namespace Render3D
 		arr4[3] = 0.f;
 		float Res[4] = { (float)*General::GameResX, (float)*General::GameResY, GameConfig::GetValue("Graphics", "UHQTreeShadows", 0) ? 960 : 2048, 0.f};
 		// distortion_juicedsettings for Gamma.
-		if (pDevice) {
-			pDevice->SetPixelShaderConstantF(187, &arr4[0], 1);
-			pDevice->SetPixelShaderConstantF(188, &Res[0], 1);
-		}
+		SetPSConstF(187, &arr4[0], 1);
+		SetPSConstF(188, &Res[0], 1);
 	}
 	void SETLOD(SafetyHookContext& ctx) {
 		if (OVERRIDE_SHADER_LOD == 1) {
@@ -816,8 +821,19 @@ namespace Render3D
 
 	}
 
+	bool AlphaMaskAvailable() { // 2 in 1, fix for the NVIDIA oversight (no unnecessary additional check), as well as updating the shader constant for our modified shaders
+		unsigned char MSAA = *(unsigned char*)DynAddress(0x0252A2A3);
+		unsigned char AlphaMaskVal = *(unsigned char*)DynAddress(0x0252A2EC);
+
+		bool Result = MSAA && AlphaMaskVal;
+		float AlphaMask = Result;
+		SetPSConstF(189, &AlphaMask, 1);
+		return Result;
+	}
+
 	void Init()
 	{
+		patchJmp((void*)DynAddress(0x00D755F0), &AlphaMaskAvailable);
 		Shadows::Init();
 		if(GameConfig::GetValue("Graphics","RemovePixelationShader",0))
 		shaders_pc_hook();
