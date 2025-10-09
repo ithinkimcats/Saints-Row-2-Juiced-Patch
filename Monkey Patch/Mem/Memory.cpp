@@ -182,15 +182,15 @@ namespace Memory
 			ExpandGeneralPools();
 		}
 
-		if (GameConfig::GetValue("Graphics", "ExtendedTreeFadeDistance", 0))
-		{
-			ExpandTreeDist();
-		}
+		//if (GameConfig::GetValue("Graphics", "ExtendedTreeFadeDistance", 0))
+		//{
+		//	ExpandTreeDist();
+		//}
 
-		if (GameConfig::GetValue("Graphics", "ExtendedShadowRenderDistance", 0))
-		{
-			ExpandShadowRenderDist();
-		}
+		//if (GameConfig::GetValue("Graphics", "ExtendedShadowRenderDistance", 0))
+		//{
+		//	ExpandShadowRenderDist();
+		//}
 #endif
 	}
 }
