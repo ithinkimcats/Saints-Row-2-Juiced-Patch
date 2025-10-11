@@ -542,6 +542,14 @@ namespace Render3D
 	void ResizeEffects() {
 		int CurrentX = *(int*)0x22FD84C;
 		int CurrentY = *(int*)0x22FD850;
+
+		// Limit the height (Y) to 1080 while preserving aspect ratio
+		if (CurrentY > 1080) {
+			float aspectRatio = (float)CurrentX / (float)CurrentY;
+			CurrentY = 1080;
+			CurrentX = (int)(1080 * aspectRatio);
+		}
+
 		SetDOFRes(CurrentX, CurrentY);
 		SetBloomRes(CurrentX, CurrentY, (float)CurrentX, (float)CurrentY);
 		SetWaterReflRes(CurrentX, CurrentY);
