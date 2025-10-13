@@ -543,17 +543,51 @@ namespace Render3D
 		int CurrentX = *(int*)0x22FD84C;
 		int CurrentY = *(int*)0x22FD850;
 
-		// Limit the height (Y) to 1080 while preserving aspect ratio
-		if (CurrentY > 1080) {
-			float aspectRatio = (float)CurrentX / (float)CurrentY;
-			CurrentY = 1080;
-			CurrentX = (int)(1080 * aspectRatio);
+		float aspectRatio = (float)CurrentX / (float)CurrentY;
+
+		// DOF
+		{
+			int dofX = CurrentX;
+			int dofY = CurrentY;
+			if (dofY > 640) {
+				dofY = 640;
+				dofX = (int)(dofY * aspectRatio);
+			}
+			SetDOFRes(dofX, dofY);
 		}
 
-		SetDOFRes(CurrentX, CurrentY);
-		SetBloomRes(CurrentX, CurrentY, (float)CurrentX, (float)CurrentY);
-		SetWaterReflRes(CurrentX, CurrentY);
-		SetVehReflRes(CurrentX);
+		// Bloom
+		{
+			int bloomX = CurrentX;
+			int bloomY = CurrentY;
+			if (bloomY > 1080) {
+				bloomY = 1080;
+				bloomX = (int)(bloomY * aspectRatio);
+			}
+			SetBloomRes(bloomX, bloomY, (float)bloomX, (float)bloomY);
+		}
+
+		// Water reflections
+		{
+			int waterX = CurrentX;
+			int waterY = CurrentY;
+			if (waterY > 800) {
+				waterY = 800;
+				waterX = (int)(waterY * aspectRatio);
+			}
+			SetWaterReflRes(waterX, waterY);
+		}
+
+		// Vehicle reflections
+		{
+			int vehX = CurrentX;
+			int vehY = CurrentY;
+			if (vehY > 640) {
+				vehY = 640;
+				vehX = (int)(vehY * aspectRatio);
+			}
+			SetVehReflRes(vehX);
+		}
 		//SetAORes(CurrentX, CurrentY);
 		SetGraphics();
 	}
