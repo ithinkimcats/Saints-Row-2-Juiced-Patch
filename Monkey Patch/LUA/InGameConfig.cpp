@@ -1155,7 +1155,9 @@ namespace InGameConfig {
                     }
                 }
             }
-            }
+#if !RELOADED
+        }
+#endif
 
 
         

@@ -1676,6 +1676,10 @@ int WINAPI Hook_WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCm
 	Reloaded::Init();
 	Behavior::BetterMovement();
 	packfile::PatchThaRowPackfiles();
+#if RLDEV
+	Debug::PatchDatafiles();
+#endif 
+
 #else
 	Debug::PatchDatafiles();
 #endif

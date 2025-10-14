@@ -319,10 +319,9 @@ int processtextwidth(int width) {
 			__asm popad
 		}
 #else
+		bool& r_is_widescreen = *(bool*)0x025272DD;
 #if !RELOADED
 		if (*(BYTE*)0x02527B75 == 1 && *(BYTE*)0xE8D56B == 1) {
-
-			bool& r_is_widescreen = *(bool*)0x025272DD;
 
 			int x = 0;
 			int y = 0;
