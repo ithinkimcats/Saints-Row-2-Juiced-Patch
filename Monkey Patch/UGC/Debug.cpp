@@ -119,6 +119,53 @@ namespace Debug
 			__asm popad
 		}
 	}
+
+	int __cdecl printf_mempool_hook(const char* const Format, ...) {
+		va_list args;
+		va_list args_copy;
+		int result = 0;
+		va_start(args, Format);
+		va_copy(args_copy, args);
+		int size = vsnprintf(NULL, 0, Format, args) + 1;
+
+		if (size > 0) {
+			char* buffer = (char*)malloc(size);
+			if (buffer) {
+
+				vsnprintf(buffer, size, Format, args_copy);
+
+				const char* extra_prefix = "[MEMPOOL ERROR]\n";
+				const char* extra_suffix = "\nMost likely caused by an installed mod, please attempt to increase original mempool size, expect issues otherwise.";
+
+				int extended_size = strlen(extra_prefix) + strlen(buffer) + strlen(extra_suffix) + 1;
+				char* extended_buffer = (char*)malloc(extended_size);
+
+				if (extended_buffer) {
+					snprintf(extended_buffer, extended_size, "%s%s%s",
+						extra_prefix, buffer, extra_suffix);
+
+
+					MessageBoxA(NULL, extended_buffer, "Juiced Patch", MB_OK | MB_ICONERROR);
+
+					free(extended_buffer);
+				}
+				else {
+
+					MessageBoxA(NULL, buffer, "Juiced Patch", MB_OK | MB_ICONERROR);
+				}
+
+
+				result = printf("%s", buffer);
+
+				free(buffer);
+			}
+		}
+
+		va_end(args_copy);
+		va_end(args);
+		return result;
+	}
+
 	void Init() {
 		OptionsManager::registerOption("Graphics", "DynamicRenderDistance", (int*)&UseDynamicRenderDistance, 0);
 #if !JLITE
@@ -158,5 +205,13 @@ namespace Debug
 			Logger::TypedLog(CHN_DEBUG, "Fixing Frametime issues...\n");
 			fixFrametime = 1;
 		}
+
+		if (GameConfig::GetValue("Debug", "mempool_print_error", 1) != 0) {
+			patchCall((void*)0xBFCA9E, printf_mempool_hook);
+			patchCall((void*)0xBFCB5F, printf_mempool_hook);
+			patchCall((void*)0xBFCBBE, printf_mempool_hook);
+			patchCall((void*)0xC00E4A, printf_mempool_hook);
+		}
+
 	}
 }
