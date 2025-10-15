@@ -16,13 +16,89 @@ import OptionsManager;
 #include <safetyhook.hpp>
 #include "../Game/Game.h"
 #include <Hooking.Patterns.h>
+#include <SDL3/SDL_gamepad.h>
+#include <SDL3/SDL_init.h>
 bool IsKeyPressed(unsigned char Key, bool Hold);
 int __fastcall subT_6218F0(DWORD* a1);
 namespace Input {
 	// DO NOT CHANGE WHILE GAME IS RUNNING, only meant to disable on runtime. if it causes any issues (hopefully none) 
 	BYTE EnableDynamicPrompts = 2;
+	static SDL_Gamepad* g_gamepad = NULL;
 	bool allow_hacked_inventory_KBM;
 	int HoldFineAim = false;
+
+	static bool SDL_isPlayStationController() {
+		if (!g_gamepad) return false;
+
+		SDL_GamepadType type = SDL_GetGamepadType(g_gamepad);
+
+		if (type == SDL_GAMEPAD_TYPE_PS3 || type == SDL_GAMEPAD_TYPE_PS4 || type == SDL_GAMEPAD_TYPE_PS5) {
+			return true;
+		}
+
+		Uint16 vendor = SDL_GetGamepadVendor(g_gamepad);
+		if (vendor == 0x054C) {  // Sony vendor ID
+			return true;
+		}
+
+		return false;
+	}
+	int usePS3Prompts = false;
+
+	ControllerType sdlToControllerType(SDL_GamepadType sdlType) {
+		switch (sdlType) {
+		case SDL_GAMEPAD_TYPE_XBOXONE:
+			return XboxSeriesX;
+
+		case SDL_GAMEPAD_TYPE_PS5:
+			return PS5;
+
+		case SDL_GAMEPAD_TYPE_PS4:
+		case SDL_GAMEPAD_TYPE_PS3:
+			return PS3;
+
+		case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_PRO:
+		case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_LEFT:
+		case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT:
+		case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR:
+			return nx;
+
+		case SDL_GAMEPAD_TYPE_STANDARD:
+			return Xbox360;
+
+		case SDL_GAMEPAD_TYPE_XBOX360:
+			return Xbox360;
+
+
+		case SDL_GAMEPAD_TYPE_UNKNOWN:
+		default:
+			return Xbox360;
+		}
+	}
+
+	ControllerType forced_current_controller_type;
+
+	ControllerType GetControllerType() {
+		if (forced_current_controller_type != NONE)
+			return forced_current_controller_type;
+
+		if (g_gamepad)
+			return sdlToControllerType(SDL_GetGamepadType(g_gamepad));
+
+	}
+
+	bool UsePS3Prompts() {
+		auto cur = GetControllerType();
+		if (cur == PS3 || cur == PS5)
+			return true;
+		if (!g_gamepad)
+			return false;
+
+		return SDL_isPlayStationController();
+	}
+
+
+
 	bool __declspec(naked) key_held(int keycode) {
 		static const DWORD func_addr = 0xC111D0;
 		__asm {
@@ -271,25 +347,52 @@ namespace Input {
 	struct ControllerMapping {
 		const wchar_t* xbox;
 		const wchar_t* ps3;
+		const wchar_t* steamdeck;
+		const wchar_t* xboxseriesx;
+		const wchar_t* nx;
+		const wchar_t* ps5;
+	};
+
+
+
+	std::unordered_map<controller_values, ControllerMappingSDL> char_SDLButtons_lua = {
+		{a_button, {"ui_ctrl_sdk_btn_a", "ui_ctrl_xsx_btn_a", "ui_ctrl_nx_btn_b", "ui_ctrl_ps5_btn_cross"}},
+		{b_button, {"ui_ctrl_sdk_btn_b", "ui_ctrl_xsx_btn_b", "ui_ctrl_nx_btn_a", "ui_ctrl_ps5_btn_circle"}},
+		{x_button, {"ui_ctrl_sdk_btn_x", "ui_ctrl_xsx_btn_x", "ui_ctrl_nx_btn_y", "ui_ctrl_ps5_btn_square"}},
+		{y_button, {"ui_ctrl_sdk_btn_y", "ui_ctrl_xsx_btn_y", "ui_ctrl_nx_btn_x", "ui_ctrl_ps5_btn_triangle"}},
+		{right_stick, {"ui_ctrl_sdk_R3", "ui_ctrl_xsx_RS", "ui_ctrl_nx_RS", "ui_ctrl_ps5_R3"}},
+		{lt_button, {"ui_ctrl_sdk_L1", "ui_ctrl_xsx_LB", "ui_ctrl_nx_L", "ui_ctrl_ps5_L1"}}, // PC PORT AHH, defualt bindings are RB/LB and are only used in horz menus
+		{rt_button, {"ui_ctrl_sdk_R1", "ui_ctrl_xsx_LB", "ui_ctrl_nx_R", "ui_ctrl_ps5_R1"}}, // PC PORT AHH
+		{lb_button, {"ui_ctrl_sdk_L1", "ui_ctrl_xsx_LB", "ui_ctrl_nx_L", "ui_ctrl_ps5_L1"}},
+		{rb_button, {"ui_ctrl_sdk_R1", "ui_ctrl_xsx_RB", "ui_ctrl_nx_R", "ui_ctrl_ps5_R1"}},
+		{left_right, {"ui_ctrl_sdk_dpad_lr", "ui_ctrl_xsx_dpad_lr", "ui_ctrl_nx_dpad_lr", "ui_ctrl_ps5_dpad_lr"}},
+		{up_down, {"ui_ctrl_sdk_dpad_ud", "ui_ctrl_xsx_dpad_ud", "ui_ctrl_nx_dpad_ud", "ui_ctrl_ps5_dpad_ud"}},
+		{left_trigger, {"ui_ctrl_sdk_L2", "ui_ctrl_xsx_LT", "ui_ctrl_nx_ZL", "ui_ctrl_ps5_L2"}},
+		{right_trigger, {"ui_ctrl_sdk_R2", "ui_ctrl_xsx_RT", "ui_ctrl_nx_ZR", "ui_ctrl_ps5_R2"}},
+		{dpad_image, {"ui_ctrl_sdk_dpad", "ui_ctrl_xsx_dpad", "ui_ctrl_nx_dpad", "ui_ctrl_ps5_dpad"}},
+		{dpad_lr_image, {"ui_ctrl_sdk_dpad_lr", "ui_ctrl_xsx_dpad_lr", "ui_ctrl_nx_dpad_lr", "ui_ctrl_ps5_dpad_lr"}},
+		{dpad_ud_image, {"ui_ctrl_sdk_dpad_ud", "ui_ctrl_xsx_dpad_ud", "ui_ctrl_nx_dpad_ud", "ui_ctrl_ps5_dpad_ud"}},
+		{control_stick_base, {"ui_ctrl_sdk_S", "ui_ctrl_xsx_S", "ui_ctrl_nx_S", "ui_ctrl_ps5_S"}},
+		{control_stick_thumb, {"ui_ctrl_sdk_S", "ui_ctrl_xsx_S", "ui_ctrl_nx_S", "ui_ctrl_ps5_S"}}
 	};
 
 	std::unordered_map<int, ControllerMapping> padButtonMaps = {
-		{0, {L"ui_ctrl_360_btn_a", L"ui_ctrl_ps3_btn_cross"}},
-		{1, {L"ui_ctrl_360_btn_b", L"ui_ctrl_ps3_btn_circle"}},
-		{2, {L"ui_ctrl_360_btn_x", L"ui_ctrl_ps3_btn_square"}},
-		{3, {L"ui_ctrl_360_btn_y", L"ui_ctrl_ps3_btn_triangle"}},
-		{4, {L"ui_ctrl_360_btn_lb", L"ui_ctrl_ps3_btn_l1"}},
-		{5, {L"ui_ctrl_360_btn_rb", L"ui_ctrl_ps3_btn_r1"}},
-		{6, {L"ui_ctrl_360_btn_back", L"ui_ctrl_ps3_btn_select"}},
-		{7, {L"ui_ctrl_360_btn_start", L"ui_ctrl_ps3_btn_start"}},
-		{8, {L"ui_ctrl_360_btn_ls", L"ui_ctrl_ps3_btn_l3"}},
-		{9, {L"ui_ctrl_360_btn_rs", L"ui_ctrl_ps3_btn_r3"}},
-		{10, {L"ui_ctrl_360_btn_lt", L"ui_ctrl_ps3_btn_l2"}},
-		{11, {L"ui_ctrl_360_btn_rt", L"ui_ctrl_ps3_btn_r2"}},
-		{16, {L"ui_ctrl_360_dpad_r", L"ui_ctrl_ps3_dpad_r"}},
-		{17, {L"ui_ctrl_360_dpad_u", L"ui_ctrl_ps3_dpad_u"}},
-		{18, {L"ui_ctrl_360_dpad_l", L"ui_ctrl_ps3_dpad_l"}},
-		{19, {L"ui_ctrl_360_dpad_d", L"ui_ctrl_ps3_dpad_d"}}
+		{0, {L"ui_ctrl_360_btn_a", L"ui_ctrl_ps3_btn_cross", L"ui_ctrl_sdk_btn_a", L"ui_ctrl_xsx_btn_a", L"ui_ctrl_nx_btn_b", L"ui_ctrl_ps5_btn_cross"}}, // A/Cross (Nintendo B is bottom)
+		{1, {L"ui_ctrl_360_btn_b", L"ui_ctrl_ps3_btn_circle", L"ui_ctrl_sdk_btn_b", L"ui_ctrl_xsx_btn_b", L"ui_ctrl_nx_btn_a", L"ui_ctrl_ps5_btn_circle"}}, // B/Circle (Nintendo A is right)
+		{2, {L"ui_ctrl_360_btn_x", L"ui_ctrl_ps3_btn_square", L"ui_ctrl_sdk_btn_x", L"ui_ctrl_xsx_btn_x", L"ui_ctrl_nx_btn_y", L"ui_ctrl_ps5_btn_square"}}, // X/Square (Nintendo Y is left)
+		{3, {L"ui_ctrl_360_btn_y", L"ui_ctrl_ps3_btn_triangle", L"ui_ctrl_sdk_btn_y", L"ui_ctrl_xsx_btn_y", L"ui_ctrl_nx_btn_x", L"ui_ctrl_ps5_btn_triangle"}}, // Y/Triangle (Nintendo X is top)
+		{4, {L"ui_ctrl_360_btn_lb", L"ui_ctrl_ps3_btn_l1", L"ui_ctrl_sdk_L1", L"ui_ctrl_xsx_LB", L"ui_ctrl_nx_L", L"ui_ctrl_ps5_L1"}}, // Left Bumper/L1
+		{5, {L"ui_ctrl_360_btn_rb", L"ui_ctrl_ps3_btn_r1", L"ui_ctrl_sdk_R1", L"ui_ctrl_xsx_RB", L"ui_ctrl_nx_R", L"ui_ctrl_ps5_R1"}}, // Right Bumper/R1
+		{6, {L"ui_ctrl_360_btn_back", L"ui_ctrl_ps3_btn_select", L"ui_ctrl_sdk_select", L"ui_ctrl_xsx_select", L"ui_ctrl_nx_select", L"ui_ctrl_ps5_select"}}, // Back/Select
+		{7, {L"ui_ctrl_360_btn_start", L"ui_ctrl_ps3_btn_start", L"ui_ctrl_sdk_start", L"ui_ctrl_xsx_start", L"ui_ctrl_nx_start", L"ui_ctrl_ps5_start"}}, // Start
+		{8, {L"ui_ctrl_360_btn_ls", L"ui_ctrl_ps3_btn_l3", L"ui_ctrl_sdk_L3", L"ui_ctrl_xsx_LS", L"ui_ctrl_nx_LS", L"ui_ctrl_ps5_L3"}}, // Left Stick Click
+		{9, {L"ui_ctrl_360_btn_rs", L"ui_ctrl_ps3_btn_r3", L"ui_ctrl_sdk_R3", L"ui_ctrl_xsx_RS", L"ui_ctrl_nx_RS", L"ui_ctrl_ps5_R3"}}, // Right Stick Click
+		{10, {L"ui_ctrl_360_btn_lt", L"ui_ctrl_ps3_btn_l2", L"ui_ctrl_sdk_L2", L"ui_ctrl_xsx_LT", L"ui_ctrl_nx_ZL", L"ui_ctrl_ps5_L2"}}, // Left Trigger/L2/ZL
+		{11, {L"ui_ctrl_360_btn_rt", L"ui_ctrl_ps3_btn_r2", L"ui_ctrl_sdk_R2", L"ui_ctrl_xsx_RT", L"ui_ctrl_nx_ZR", L"ui_ctrl_ps5_R2"}}, // Right Trigger/R2/ZR
+		{16, {L"ui_ctrl_360_dpad_r", L"ui_ctrl_ps3_dpad_r", L"ui_ctrl_sdk_dpad_right", L"ui_ctrl_xsx_dpad_right", L"ui_ctrl_nx_dpad_right", L"ui_ctrl_ps5_dpad_right"}}, // D-pad Right
+		{17, {L"ui_ctrl_360_dpad_u", L"ui_ctrl_ps3_dpad_u", L"ui_ctrl_sdk_dpad_up", L"ui_ctrl_xsx_dpad_up", L"ui_ctrl_nx_dpad_up", L"ui_ctrl_ps5_dpad_up"}}, // D-pad Up
+		{18, {L"ui_ctrl_360_dpad_l", L"ui_ctrl_ps3_dpad_l", L"ui_ctrl_sdk_dpad_left", L"ui_ctrl_xsx_dpad_left", L"ui_ctrl_nx_dpad_left", L"ui_ctrl_ps5_dpad_left"}}, // D-pad Left
+		{19, {L"ui_ctrl_360_dpad_d", L"ui_ctrl_ps3_dpad_d", L"ui_ctrl_sdk_dpad_down", L"ui_ctrl_xsx_dpad_down", L"ui_ctrl_nx_dpad_down", L"ui_ctrl_ps5_dpad_down"}} // D-pad Down
 	};
 
 	std::unordered_map<int, const wchar_t*> padButtonToText = {
@@ -312,23 +415,59 @@ namespace Input {
 	};
 
 	std::unordered_map<int, ControllerMapping> actionsToController = {
-	{2, {L"ui_ctrl_360_btn_ls",L"ui_ctrl_ps3_btn_l3"}},
-	{3, {L"ui_ctrl_360_btn_ls",L"ui_ctrl_ps3_btn_l3"}},
-	// ??? -Clippy95
-	{12, {L"ui_ctrl_360_btn_a", L"ui_ctrl_ps3_btn_cross"}},
+		{0, {L"ui_ctrl_360_btn_ls", L"ui_ctrl_ps3_btn_l3", L"ui_ctrl_sdk_L3", L"ui_ctrl_xsx_LS", L"ui_ctrl_nx_LS", L"ui_ctrl_ps5_L3"}},
+		{2, {L"ui_ctrl_360_btn_ls", L"ui_ctrl_ps3_btn_l3", L"ui_ctrl_sdk_L3", L"ui_ctrl_xsx_LS", L"ui_ctrl_nx_LS", L"ui_ctrl_ps5_L3"}},
+		{3, {L"ui_ctrl_360_btn_ls", L"ui_ctrl_ps3_btn_l3", L"ui_ctrl_sdk_L3", L"ui_ctrl_xsx_LS", L"ui_ctrl_nx_LS", L"ui_ctrl_ps5_L3"}},
+		{12, {L"ui_ctrl_360_btn_a", L"ui_ctrl_ps3_btn_cross", L"ui_ctrl_sdk_btn_a", L"ui_ctrl_xsx_btn_a", L"ui_ctrl_nx_btn_b", L"ui_ctrl_ps5_btn_cross"}},
 	};
 
 	bool useTextPrompts = false;
-	int usePS3Prompts = false;
+
+	
+
 	wchar_t* __cdecl getpckeyboardimage_hook(uint32_t* action_index, int mouse) {
 		if (LastInputUI() == GAME_LAST_INPUT::CONTROLLER) {
+			ControllerType controller_type = GetControllerType();
+
+			// Default to Xbox360 if NONE
+			if (controller_type == NONE) {
+				controller_type = Xbox360;
+			}
+
 			if (prompt_image_buffer_index > 9500) {
 				prompt_image_buffer_index = 0;
 			}
 			int start_index = prompt_image_buffer_index;
+
 			if (!action_index) {
-				if (mouse == 1) {
-					const wchar_t* buttonImage = usePS3Prompts ? L"ui_ctrl_ps3_btn_r3" : L"ui_ctrl_360_btn_rs";
+				auto action_controller_pc = (mouse == 1) ? padButtonMaps.find(9) : padButtonMaps.find(8);
+				if (action_controller_pc != padButtonMaps.end()) {
+					const wchar_t* buttonImage = nullptr;
+
+					switch (controller_type) {
+					case Xbox360:
+						buttonImage = action_controller_pc->second.xbox;
+						break;
+					case PS3:
+						buttonImage = action_controller_pc->second.ps3;
+						break;
+					case SteamDeck:
+						buttonImage = action_controller_pc->second.steamdeck;
+						break;
+					case XboxSeriesX:
+						buttonImage = action_controller_pc->second.xboxseriesx;
+						break;
+					case nx:
+						buttonImage = action_controller_pc->second.nx;
+						break;
+					case PS5:
+						buttonImage = action_controller_pc->second.ps5;
+						break;
+					default:
+						buttonImage = action_controller_pc->second.xbox; // Default to Xbox360
+						break;
+					}
+
 					wsprintf(&prompt_image_buffer[prompt_image_buffer_index], L"[format][scale:1.0][image:%s][/format]", buttonImage);
 					prompt_image_buffer_index += wcslen(&prompt_image_buffer[start_index]) + 1;
 					return &prompt_image_buffer[start_index];
@@ -336,19 +475,71 @@ namespace Input {
 				else
 					return getpckeyboardimage_T.ccall<wchar_t*>(action_index, mouse);
 			}
+
 			int controller_key = PC_port_key_for_controler_assignments[*action_index + 2].controller_button;
 			int keyboard_key = PC_port_key_for_controler_assignments[*action_index + 2].keyboard_button;
-
 			auto it = padButtonMaps.find(controller_key);
+
 			if (it != padButtonMaps.end()) {
-				const wchar_t* buttonImage = usePS3Prompts ? it->second.ps3 : it->second.xbox;
+				const wchar_t* buttonImage = nullptr;
+
+				switch (controller_type) {
+				case Xbox360:
+					buttonImage = it->second.xbox;
+					break;
+				case PS3:
+					buttonImage = it->second.ps3;
+					break;
+				case SteamDeck:
+					buttonImage = it->second.steamdeck;
+					break;
+				case XboxSeriesX:
+					buttonImage = it->second.xboxseriesx;
+					break;
+				case nx:
+					buttonImage = it->second.nx;
+					break;
+				case PS5:
+					buttonImage = it->second.ps5;
+					break;
+				default:
+					buttonImage = it->second.xbox; // Default to Xbox360
+					break;
+				}
+
 				wsprintf(&prompt_image_buffer[prompt_image_buffer_index], L"[format][scale:1.0][image:%s][/format]", buttonImage);
 			}
 			else if (controller_key == -1) {
 				auto actionfinder = actionsToController.find(*action_index);
-				const wchar_t* buttonImageActions = usePS3Prompts ? actionfinder->second.ps3 : actionfinder->second.xbox;
-				if (actionfinder != actionsToController.end())
+				if (actionfinder != actionsToController.end()) {
+					const wchar_t* buttonImageActions = nullptr;
+
+					switch (controller_type) {
+					case Xbox360:
+						buttonImageActions = actionfinder->second.xbox;
+						break;
+					case PS3:
+						buttonImageActions = actionfinder->second.ps3;
+						break;
+					case SteamDeck:
+						buttonImageActions = actionfinder->second.steamdeck;
+						break;
+					case XboxSeriesX:
+						buttonImageActions = actionfinder->second.xboxseriesx;
+						break;
+					case nx:
+						buttonImageActions = actionfinder->second.nx;
+						break;
+					case PS5:
+						buttonImageActions = actionfinder->second.ps5;
+						break;
+					default:
+						buttonImageActions = actionfinder->second.xbox;
+						break;
+					}
+
 					wsprintf(&prompt_image_buffer[prompt_image_buffer_index], L"[format][scale:1.0][image:%s][/format]", buttonImageActions);
+				}
 				else {
 					wsprintf(&prompt_image_buffer[prompt_image_buffer_index], L"[format][scale:0.7]Action %d[/format]", *action_index);
 				}
@@ -357,20 +548,21 @@ namespace Input {
 				wsprintf(&prompt_image_buffer[prompt_image_buffer_index], L"[format][scale:0.7]Pad %d[/format]", controller_key + 1);
 				Logger::TypedLog("ERROR", "Was supposed to give an item out! pad_button %d actions %d button %d ,mouse %d\n", controller_key, *action_index, keyboard_key, mouse);
 			}
+
 			prompt_image_buffer_index += wcslen(&prompt_image_buffer[start_index]) + 1;
 			return &prompt_image_buffer[start_index];
 		}
-		else if(action_index) {
+		else if (action_index) {
 			int keyboard_key = PC_port_key_for_controler_assignments[*action_index + 2].keyboard_button;
 			if (keyboard_key == 0x103 || keyboard_key == 0x104) {
 				if (prompt_image_buffer_index > 9500) {
 					prompt_image_buffer_index = 0;
 				}
 				int start_index = prompt_image_buffer_index;
-				if(keyboard_key == 0x104)
-				wsprintf(&prompt_image_buffer[prompt_image_buffer_index], L"[format][color:purple]%s[/format]", L"Mouse 5");
+				if (keyboard_key == 0x104)
+					wsprintf(&prompt_image_buffer[prompt_image_buffer_index], L"[format][color:purple]%s[/format]", L"Mouse 5");
 				else if (keyboard_key == 0x103)
-				wsprintf(&prompt_image_buffer[prompt_image_buffer_index], L"[format][color:purple]%s[/format]", L"Mouse 4");
+					wsprintf(&prompt_image_buffer[prompt_image_buffer_index], L"[format][color:purple]%s[/format]", L"Mouse 4");
 				prompt_image_buffer_index += wcslen(&prompt_image_buffer[start_index]) + 1;
 				return &prompt_image_buffer[start_index];
 			}
@@ -504,7 +696,244 @@ namespace Input {
 			pause_map_crosshair->y += ((float)mouse().getYdelta() * mouse().getMouseY_sens()) * zoom_modifier;
 			});
 	}
+
+	inline void controller_disconect_dialog_prevframe() {
+		*(bool*)0xE8DFBF = false;
+	}
+
+	int __declspec(naked) controller_flushasm(controller* a1) {
+		static const DWORD controllerflush_addr = 0x75C700;
+		__asm {
+			push ebp
+			mov ebp, esp
+			sub esp, __LOCAL_SIZE
+			mov     eax, a1
+			call controllerflush_addr
+			mov esp, ebp
+			pop ebp
+			ret
+		}
+	}
+
+	void controller_flush(controller* a1) {
+		__asm pushad
+		__asm pushfd
+		controller_flushasm(a1);
+		__asm popfd
+		__asm popad
+	}
+
+	int __declspec(naked) set_deadzoneasm(float* x, float* y, float deadzone) {
+		static const DWORD set_deadzone_addr = 0xC13A90;
+		__asm {
+			push ebp
+			mov ebp, esp
+			sub esp, __LOCAL_SIZE
+
+			mov     edi, x
+
+			mov     esi, y
+
+			push deadzone
+
+			call set_deadzone_addr
+			mov esp, ebp
+			pop ebp
+			ret
+		}
+	}
+
+	void __stdcall set_deadzone(float* x, float* y, float deadzone) {
+		__asm pushad
+		__asm pushfd
+		set_deadzoneasm(x, y, deadzone);
+		__asm popfd
+		__asm popad
+	}
+
+	void __cdecl input_pc_poll_sdl(controller* cntrl)
+	{
+		bool& pad_is_connected = *(bool*)0x0252A58E;
+		SDL_Event event;
+		const char* GamepadName = NULL;
+		while (SDL_PollEvent(&event)) {
+			if (event.type == SDL_EVENT_GAMEPAD_ADDED) {
+				if (!g_gamepad) {
+					g_gamepad = SDL_OpenGamepad(event.gdevice.which);
+					if (g_gamepad) {
+						if (!pad_is_connected) {
+							controller_disconect_dialog_prevframe();
+						}
+						pad_is_connected = 1;
+						GamepadName = SDL_GetGamepadName(g_gamepad);
+						if(GamepadName)
+						Logger::TypedLog("SDL", "%s connected\n", GamepadName);
+					}
+				}
+			}
+			else if (event.type == SDL_EVENT_GAMEPAD_REMOVED) {
+				if (g_gamepad && event.gdevice.which == SDL_GetGamepadID(g_gamepad)) {
+					GamepadName = SDL_GetGamepadName(g_gamepad);
+					if (GamepadName)
+						Logger::TypedLog("SDL", "%s disconnected\n", GamepadName);
+					SDL_CloseGamepad(g_gamepad);
+					g_gamepad = NULL;
+					if (pad_is_connected) {
+						controller_flush(cntrl);
+					}
+					pad_is_connected = 0;
+				}
+			}
+		}
+
+		// Check if we need to find/reconnect a gamepad
+		if (!g_gamepad) {
+			// Try to find and open the first available gamepad
+			int num_joysticks;
+			SDL_JoystickID* joysticks = SDL_GetJoysticks(&num_joysticks);
+			if (joysticks) {
+				for (int i = 0; i < num_joysticks; i++) {
+					if (SDL_IsGamepad(joysticks[i])) {
+						g_gamepad = SDL_OpenGamepad(joysticks[i]);
+						if (g_gamepad) {
+							if (!pad_is_connected) {
+								controller_disconect_dialog_prevframe();
+							}
+							pad_is_connected = 1;
+							SDL_free(joysticks);
+							break;
+						}
+					}
+				}
+				SDL_free(joysticks);
+			}
+
+			// No gamepad found
+			if (!g_gamepad) {
+				if (pad_is_connected) {
+					controller_flush(cntrl);
+				}
+				pad_is_connected = 0;
+				return;
+			}
+		}
+
+		// Gamepad is connected, read input
+		if (!pad_is_connected) {
+			controller_disconect_dialog_prevframe();
+		}
+		pad_is_connected = 1;
+		cntrl->di_buttons[0] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_SOUTH) ? 128 : 0;  // A
+		cntrl->di_buttons[1] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_EAST) ? 128 : 0;   // B
+		cntrl->di_buttons[2] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_WEST) ? 128 : 0;   // X
+		cntrl->di_buttons[3] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_NORTH) ? 128 : 0;  // Y
+		cntrl->di_buttons[4] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER) ? 128 : 0; // LB
+		cntrl->di_buttons[5] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER) ? 128 : 0;// RB
+		cntrl->di_buttons[6] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_BACK) ? 128 : 0;         // Back
+		cntrl->di_buttons[7] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_START) ? 128 : 0;        // Start
+		cntrl->di_buttons[8] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_LEFT_STICK) ? 128 : 0;   // LS
+		cntrl->di_buttons[9] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_RIGHT_STICK) ? 128 : 0;  // RS
+
+		auto left_trigger = SDL_GetGamepadAxis(g_gamepad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER);
+		auto right_trigger = SDL_GetGamepadAxis(g_gamepad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER);
+
+		cntrl->di_buttons[10] = (left_trigger > 3932) ? (left_trigger * 128) / 32767 : 0;  // ~3932 = 30/255 * 32767 deadzone
+		cntrl->di_buttons[11] = (right_trigger > 3932) ? (right_trigger * 128) / 32767 : 0;
+
+		// D-pad
+		cntrl->di_buttons[16] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_DPAD_RIGHT) ? 128 : 0;  // bit 8 = RIGHT
+		cntrl->di_buttons[17] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_DPAD_UP) ? 128 : 0;     // bit 1 = UP
+		cntrl->di_buttons[18] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_DPAD_LEFT) ? 128 : 0;   // bit 4 = LEFT  
+		cntrl->di_buttons[19] = SDL_GetGamepadButton(g_gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN) ? 128 : 0;   // bit 2 = DOWN
+		//printf("cntrl all di_buttons %p\n", cntrl);
+		bool& g_CapturePadInput = *(bool*)0x252A5B0;
+		bool* g_PadCaptureStates = (bool*)0x2349808;
+		if (g_CapturePadInput) {
+			for (unsigned int i = 0; i < cntrl->di_num_buttons; ++i) {
+				g_PadCaptureStates[i] = cntrl->di_buttons[i] != 0;
+			}
+			*(bool*)0x2349818 = cntrl->di_buttons[16] != 0;  // Up
+			*(bool*)0x2349819 = cntrl->di_buttons[17] != 0;  // Down
+			*(bool*)0x234981A = cntrl->di_buttons[18] != 0;  // Left
+			*(bool*)0x234981B = cntrl->di_buttons[19] != 0;  // Right
+		}
+		else {
+			float axis_reading[4]{};
+			axis_reading[0] = -(float)SDL_GetGamepadAxis(g_gamepad, SDL_GAMEPAD_AXIS_LEFTY) / 32767.0f;    // Left Y (inverted)
+			axis_reading[1] = (float)SDL_GetGamepadAxis(g_gamepad, SDL_GAMEPAD_AXIS_LEFTX) / 32767.0f;     // Left X
+			axis_reading[2] = -(float)SDL_GetGamepadAxis(g_gamepad, SDL_GAMEPAD_AXIS_RIGHTY) / 32767.0f;   // Right Y (inverted)
+			axis_reading[3] = (float)SDL_GetGamepadAxis(g_gamepad, SDL_GAMEPAD_AXIS_RIGHTX) / 32767.0f;    // Right X
+
+			int* axis_bind = (int*)0x234E768;
+
+			cntrl->joys[4].x_val = axis_reading[axis_bind[0]];
+			cntrl->joys[4].y_val = axis_reading[axis_bind[1]];
+			cntrl->joys[3].x_val = axis_reading[axis_bind[2]];
+			cntrl->joys[3].y_val = axis_reading[axis_bind[3]];
+
+			// Apply deadzones
+			set_deadzone(&cntrl->joys[4].x_val, &cntrl->joys[4].y_val, cntrl->joys[4].deadzone);
+			set_deadzone(&cntrl->joys[3].x_val, &cntrl->joys[3].y_val, cntrl->joys[3].deadzone);
+
+			// Fallback assignments
+			if (cntrl->joys[0].x_val == 0.0f) cntrl->joys[0].x_val = cntrl->joys[4].x_val;
+			if (cntrl->joys[0].y_val == 0.0f) cntrl->joys[0].y_val = cntrl->joys[4].y_val;
+			if (cntrl->joys[1].x_val == 0.0f) cntrl->joys[1].x_val = cntrl->joys[3].x_val;
+			if (cntrl->joys[1].y_val == 0.0f) cntrl->joys[1].y_val = cntrl->joys[3].y_val;
+			if (cntrl->joys[6].x_val == 0.0f) cntrl->joys[6].x_val = cntrl->joys[3].x_val;
+			if (cntrl->joys[6].y_val == 0.0f) cntrl->joys[6].y_val = cntrl->joys[3].y_val;
+			if (cntrl->joys[7].x_val == 0.0f) cntrl->joys[7].x_val = cntrl->joys[4].x_val;
+			if (cntrl->joys[7].y_val == 0.0f) cntrl->joys[7].y_val = cntrl->joys[4].y_val;
+			if (cntrl->joys[2].x_val == 0.0f) cntrl->joys[2].x_val = cntrl->joys[0].x_val;
+			if (cntrl->joys[2].y_val == 0.0f) cntrl->joys[2].y_val = cntrl->joys[0].y_val;
+
+			if (!cntrl->di_buttons) {
+				printf("ERROR: di_buttons became NULL, skipping button mapping addr %p value %p cntrl %p\n", &cntrl->di_buttons, cntrl->di_buttons,cntrl);
+				return;
+			}
+
+
+			for (int i = 0; i < 87; ++i) {
+				int controller_button = PC_port_key_for_controler_assignments[i + 2].controller_button;
+
+
+				if (controller_button != -1 && cntrl->buttons && cntrl->buttons[i].value == 0.0f) {
+					cntrl->buttons[i].value = (float)cntrl->di_buttons[controller_button] / 128.0f;
+				}
+			}
+		}
+	}
+
+	int __stdcall XInputSetState_SDL_replace(int dwUserIndex, XINPUT_VIBRATION* pVibration) {
+		// Ignore dwUserIndex since we only have one gamepad
+		if (!g_gamepad || !pVibration) {
+			return -1;  // Error
+		}
+
+
+		return SDL_RumbleGamepad(g_gamepad, pVibration->wLeftMotorSpeed, pVibration->wRightMotorSpeed, 0);
+	}
+
+
+	int input_pc_init_sdl()
+	{
+		if (SDL_AddGamepadMappingsFromFile("gamecontrollerdb.txt") == -1) {
+			Logger::TypedLog("SDL", "Could not load gamecontrollerdb.txt: %s\n", SDL_GetError());
+		}
+		patchNop((void*)0xC131CF, 2);
+		patchNop((void*)0xC133A2, 0xA);
+		patchNop((void*)0xC133C0, 0xA);
+		patchNop((void*)0xC133DE, 0xA);
+		patchCall((void*)0xC14A06, &XInputSetState_SDL_replace);
+		return SDL_Init(SDL_INIT_GAMEPAD);
+
+	}
+
 	void Init() {
+		if (GameConfig::GetValue("Input", "SDL", 1) != 0) {
+			input_pc_init_sdl();
+			patchJmp((void*)0xC13C80, &input_pc_poll_sdl);
+		}
 		patch_zoom_aware_interior_pause_map();
 		static auto tag_shake_frametimefix = safetyhook::create_mid(0x621C04, [](SafetyHookContext& ctx) {
 			if (g_lastInput == MOUSE) {
@@ -539,7 +968,7 @@ namespace Input {
 		OptionsManager::registerOption("Input", "HoldFineAim", &HoldFineAim);
 		if (EnableDynamicPrompts) {
 			OptionsManager::registerOption("Input", "ForceInputPrompt", &ForceInput, 0);
-			OptionsManager::registerOption("Input", "usePS3Prompts", &usePS3Prompts, 0);
+			OptionsManager::registerOption("Input", "ForcedControllerPrompts", (int*)&forced_current_controller_type, 0);
 			//SetThreadPriority(CreateThread(0, 0, LastInputCheck, 0, 0, 0),-1);
 			pc_get_action_pad_pure_text_T = safetyhook::create_inline(0xC11A90, &pc_get_action_pad_pure_text_hook);
 			getpckeyboardimage_T = safetyhook::create_inline(0xC11C00, &getpckeyboardimage_hook);

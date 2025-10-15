@@ -13,6 +13,7 @@
 #include "../FileLogger.h"
 #include "../SafeWrite.h"
 #include "../GameConfig.h"
+#include "../Patcher/patch.h"
 
 uint32_t string_hash_table::estimate_maximum_memory_usage(uint32_t hash_table_size, uint32_t string_pool_size)
 {
@@ -173,9 +174,92 @@ SAFETYHOOK_NOINLINE __int16 __fastcall bm_find_og(void* dummy1, void* dummy2, ui
     return hndl;
 }
 
+__declspec(naked) void LoadBitmapTableasm(const char* FileName) {
+
+
+    __asm {
+
+        push ebp
+        mov ebp, esp
+
+        sub esp, __LOCAL_SIZE
+        mov eax, FileName
+
+        mov edx, 0xB87540
+
+        call edx
+
+        mov esp, ebp
+
+        pop ebp
+
+        ret
+
+    }
+}
+
+bitmap_statusT bitmap_status{};
+
+void LoadExtraBitMapTable(const char* fileName) {
+    patchJmp((void*)0xB875B0, (void*)0xB875C4);
+    LoadBitmapTableasm(fileName);
+    patchDWord((void*)0xB875B0, 0xA1A005C7);
+}
+SafetyHookInline load_pegT;
+bool __fastcall load_peg_hook(const char* filename, uintptr_t mempool) {
+
+    if (mempool == 0x27716E4 && strcmp(filename, "interface-backend.peg") == 0) {
+        load_pegT.fastcall<bool>(filename, mempool);
+        bool result = load_pegT.fastcall<bool>("juiced-ui.peg", mempool);
+        bitmap_status.juiced_ui_loaded = result;
+        //load_pegT.disable();
+        return result;
+    }
+
+    return load_pegT.fastcall<bool>(filename, mempool);
+}
+
+SafetyHookInline sub_51D290T;
+
+uintptr_t sub_51D290Lang() {
+    //LoadExtraBitMapTable("ui_bms_btnmash_j.xtbl");
+    LoadExtraBitMapTable("juiced-ui.xtbl");
+    return sub_51D290T.ccall<uintptr_t>();
+}
+#define first_increase 12000 * 2
+#define second_increase 73728
 namespace bitmap_loader {
+constexpr size_t permanent_default = 0x00800000;
+#define KB (size_t)(1024)
+#define MB (size_t)(1024 * KB)
+#define GB (size_t)(1024 * MB)
     void Init() {
         if (GameConfig::GetValue("Modding", "addon_bitmaps", 1)) {
+            static auto interface_gpu_increase = safetyhook::create_mid(0x51E322, [](SafetyHookContext& ctx) {
+                if (double interface_gpu_new_size = GameConfig::GetDoubleValue("Mempool", "interface_gpu_multi", 1.5); interface_gpu_new_size >= 1.0) {
+                    ctx.esi *= interface_gpu_new_size;
+                    Logger::TypedLog("Mempool", "Patched interface_gpu size to 0x%X\n", ctx.esi);
+                }
+                });
+            size_t new_permanent_size = std::clamp(GameConfig::GetValue("Mempool", "permanent", permanent_default * 1.5), permanent_default,GB / 2);
+
+            size_t first_increase_hastable = std::clamp(GameConfig::GetValue("Mempool", "Bitmap_Image_Names_hashtable", (size_t)first_increase), (size_t)12000, GB);
+
+            size_t second_increase_BitMap_Image_names = std::clamp(GameConfig::GetValue("Mempool", "Bitmap_Image_Names", (size_t)second_increase), (size_t)49152, GB);
+
+            SafeWrite32((0x51DCB4 + 1), new_permanent_size);
+            SafeWrite32((0x51DDC8 + 1), new_permanent_size);
+            // Increase size for bitmap string hash table
+            SafeWrite32((0xB8723D + 1), first_increase_hastable);
+
+            SafeWrite32((0xB87280 + 1), second_increase_BitMap_Image_names);
+            SafeWrite32((0xB872C3 + 6), second_increase_BitMap_Image_names);
+            SafeWrite32((0xB87304 + 6), second_increase_BitMap_Image_names);
+
+
+
+            load_pegT = safetyhook::create_inline(0x522450, &load_peg_hook);
+            sub_51D290T = safetyhook::create_inline(0x51D290, sub_51D290Lang);
             SafeWrite32(0x00C08803 + 1, 1806336);
             SafeWrite32(0x00C08817 + 1, 1806336);
             bm_findT = safetyhook::create_inline(0xC07160, &bm_find);
