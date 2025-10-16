@@ -524,7 +524,7 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 				if (sdlButtonMappings.find(funcName) == sdlButtonMappings.end()) {
 					return; // Function not in mapping, skip
 				}
-				printf("HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIGFASDAGAG;LJGSDFJKLGHSDFLKHGJBDKSJFLGHDSLJKGHSDFJKGHKDJFHSBNKJTBII\n");
+
 				// Build the injection code
 				std::string injectionCode = "\tlocal controller_type = vint_get_avg_processing_time(\"INPUT_PROMPT\")\n";
 
@@ -535,11 +535,9 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 
 					if (controllerType == 1) {
 						injectionCode += "\tif controller_type == " + std::to_string(controllerType) + " then\n";
-						printf("555IIIIIIIIIIIIIIIIIIIIIIIIIIIIIGFASDAGAG;LJGSDFJKLGHSDFLKHGJBDKSJFLGHDSLJKGHSDFJKGHKDJFHSBNKJTBII\n");
 					}
 					else {
 						injectionCode += "\telseif controller_type == " + std::to_string(controllerType) + " then\n";
-						printf("11555IIIIIIIIIIIIIIIIIIIIIIIIIIIIIGFASDAGAG;LJGSDFJKLGHSDFLKHGJBDKSJFLGHDSLJKGHSDFJKGHKDJFHSBNKJTBII\n");
 					}
 					injectionCode += "\t\treturn \"" + imageName + "\"\n";
 				}
