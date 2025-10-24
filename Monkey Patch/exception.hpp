@@ -29,6 +29,7 @@
 
 #include "errhandlingapi.h"
 #include <processthreadsapi.h>
+#include "Hooker.h"
 #pragma comment(lib, "Dbghelp.lib")
 
  /*
@@ -527,6 +528,7 @@ void ExceptionTracer::PrintBacktrace()
         has_symbol_api = true;
         old_options = SymSetOptions(SYMOPT_DEFERRED_LOADS | SYMOPT_LOAD_LINES | SYMOPT_NO_PROMPTS | SYMOPT_FAIL_CRITICAL_ERRORS);
     }
+    Print("SR2_pc.exe handle 0x%p\n", HandleDynAddress);
     Print("GOTR: %s \nxtbl_scan_status flags: 0x%X\n", Game::xtbl_scan_status.gotr_detected ? "YES" : "NO", Game::xtbl_scan_status);
     Print("Backtrace (may be wrong):");
     EnterScope();
