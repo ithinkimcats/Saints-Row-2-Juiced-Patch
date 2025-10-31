@@ -45,6 +45,18 @@ inline uintptr_t ReadPointer(uintptr_t baseAddress, const std::vector<uintptr_t>
     return address;
 }
 
+
+// copied from https://www.reddit.com/r/winehq/comments/5h9pym/detect_wine_in_c_visual_studio/
+inline bool is_wine()
+{
+    HMODULE ntdllMod = GetModuleHandleA("ntdll.dll");
+
+    if (ntdllMod && GetProcAddress(ntdllMod, "wine_get_version"))
+        return true;
+
+    return false;
+}
+
 inline void GetPlayerXYZ(vector3* Dest) {
     memcpy(Dest, (void*)(0x25F5BB4), sizeof(vector3));
 }

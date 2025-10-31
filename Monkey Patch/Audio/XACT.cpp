@@ -12,6 +12,7 @@
 #include <safetyhook.hpp>
 #include "Hooking.Patterns.h"
 #include "../Game/CrashFixes.h"
+#include "..\UtilsGlobal.h"
 namespace XACT
 {
 
@@ -83,7 +84,8 @@ namespace XACT
 	}
 	void UpdateToNewerXACT()
 	{
-		if (GameConfig::GetValue("Audio", "UseFixedXAudio", 1)) // Scanti the Goat
+		int turn = UtilsGlobal::is_wine() ? 2 : 1;
+		if (GameConfig::GetValue("Audio", "UseFixedXAudio", 1) >= turn) // Scanti the Goat
 		{
 			// Forces the game to use a newer version of XACT which in turn fixes all of the audio issues
 			// in SR2 aside from 3D Panning.
