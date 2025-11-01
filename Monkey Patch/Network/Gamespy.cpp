@@ -9,9 +9,17 @@
 #include "Gamespy.h"
 #include "../UtilsGlobal.h"
 #include "STUNNat.h"
+#include <Wininet.h>
+#pragma comment(lib, "wininet.lib")
 
 namespace Gamespy
 {
+	bool IsInternetAvailable()
+	{
+		DWORD flags;
+		return InternetGetConnectedState(&flags, 0);
+	}
+
 	int(__stdcall* theirbind)(SOCKET, const struct sockaddr_in*, int) = nullptr;
 
 	int __stdcall bindWrapper(SOCKET socket, struct sockaddr_in* address, int namelen) {
@@ -43,15 +51,17 @@ namespace Gamespy
 	void Init() {
 		coopPausePatch = 0;
 
-		// Check basic NAT type on port 4200
-		std::string publicIp;
-		int publicPort = 0;
-		int localPort = 4200;  // Change to whatever port you want to test
+		if (IsInternetAvailable()) {
+			// Check basic NAT type on port 4200
+			std::string publicIp;
+			int publicPort = 0;
+			int localPort = 4200;
 
-		std::string natType = detectNatType(localPort, publicIp, publicPort);
-		UtilsGlobal::mynat_type = natType;
-		Logger::TypedLog(CHN_NET, "%s\n", UtilsGlobal::mynat_type);
-		// ----
+			std::string natType = detectNatType(localPort, publicIp, publicPort);
+			UtilsGlobal::mynat_type = natType;
+			Logger::TypedLog(CHN_NET, "%s\n", UtilsGlobal::mynat_type.c_str());
+			// ----
+		}
 
 		if (GameConfig::GetValue("Multiplayer", "FixNetworkBinding", 1))
 		{
