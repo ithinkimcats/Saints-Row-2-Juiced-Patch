@@ -126,24 +126,24 @@ bool parseMappedAddress(const uint8_t* response, int responseLength, std::string
 std::string interpretNatType(bool udpBlocked, bool portPreserved1, bool portPreserved2, bool symmetricNat)
 {
     if (udpBlocked)
-        return "NAT Type: UDP Blocked or Firewall";
+        return "NAT Type: Strict";
 
     if (symmetricNat)
-        return "Nat Type: Symmetric";
+        return "Nat Type: Strict";
 
     if (portPreserved1 && portPreserved2)
     {
         // If ports preserved on both servers and equal, Full Cone NAT
         // Otherwise, Restricted NAT (ports preserved but differ)
-        return (portPreserved1 == portPreserved2) ? "NAT Type: Full-Cone" : "NAT Type: Restricted";
+        return (portPreserved1 == portPreserved2) ? "NAT Type: Open" : "NAT Type: Moderate";
     }
     else if (portPreserved1 || portPreserved2)
     {
         // Port preserved on one server only means restricted NAT
-        return "NAT Type: Restricted";
+        return "NAT Type: Moderate";
     }
 
-    return "NAT Type: Carrier-Grade";
+    return "NAT Type: Moderate";
 }
 
 
