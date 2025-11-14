@@ -131,6 +131,23 @@ namespace Render3D
 		}
 	}
 
+	void LoadShadersHookMid(SafetyHookContext& ctx) {
+
+		uintptr_t ShaderPointer = ctx.eax;
+		const char* ShaderName = (const char*)(ctx.esi);
+
+		bool valid = ShaderPointer && ShaderName;
+
+		if (valid && _stricmp(ShaderName, "distortion_tint_desat") == 0) {
+			SafeWriteBuf((UInt32)ShaderPointer, X360GammaShader, sizeof(X360GammaShader));
+		}
+
+		if (valid && _stricmp(ShaderName, "shadow_combiner_xxxx") == 0) {
+			SafeWriteBuf((UInt32)ShaderPointer, ShadowShader, sizeof(ShadowShader));
+		}
+
+	}
+
 	void PatchHQTreeShadows() 
 	{
 		//10x resolution for TreeShadows
@@ -953,8 +970,8 @@ namespace Render3D
 			CMPatches_ClassicGTAIdleCam.Apply();
 		}
 #endif
-		WriteRelJump(0x00D1B7CE, (UInt32)&LoadShadersHook);
-
+		//WriteRelJump(0x00D1B7CE, (UInt32)&LoadShadersHook);
+		auto static LoadShadersMidHook = safetyhook::create_mid(0x00D1B7D3, LoadShadersHookMid);
 
 		WriteRelJump(0x00494080, (UInt32)&GetFOV);
 		// CLIPPY TODO MAKE THIS A TOGGLEABLE OPTION!!!
