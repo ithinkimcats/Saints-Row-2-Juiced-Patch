@@ -36,4 +36,6 @@ namespace InGameConfig {
     extern bool RegisterBoolSlider(const char* name, const char* display_name, MenuType type = MenuType::DISPLAY, int startingId = -1);
     extern void GLuaWrapper(const char* var, int* value, bool write);
     void AddOptions();
+
+    extern void DebugDumpLua(const std::string& buffer, const std::string& stage);
 }

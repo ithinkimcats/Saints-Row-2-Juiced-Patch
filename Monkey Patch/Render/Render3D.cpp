@@ -29,6 +29,8 @@
 #include <map>
 #include <Hooking.Patterns.h>
 #include "..\Hooker.h"
+#include <set>
+
 import OptionsManager; 
 
 namespace Render3D
@@ -1189,9 +1191,97 @@ constexpr auto new_size_n = 5000;
 		return result;
 	}
 
+	uint32_t AdapterCount = 0;
+	std::vector<std::pair<uint32_t, uint32_t>> AdapterModes;
+
+	bool init_directx9(void* unk) {
+		bool result = ((bool(__cdecl*)(void*))0xD1F3F0)(unk);
+		if (result == false)
+			return false;
+
+		IDirect3D9* pIDirect3D9 = *reinterpret_cast<IDirect3D9**>(0x0252A2CC);
+
+		UINT selectedAdapter = *(bool*)0x02527348;
+
+
+
+		UINT adapterCount = pIDirect3D9->GetAdapterCount();
+		for (UINT i = 0; i < adapterCount; ++i) {
+			D3DADAPTER_IDENTIFIER9 identifier;
+			pIDirect3D9->GetAdapterIdentifier(i, 0, &identifier);
+			if (strstr(identifier.Description, "PerfHUD")) {
+				selectedAdapter = i;
+				break;
+			}
+		}
+
+		AdapterModes.clear();
+		std::set<std::pair<uint32_t, uint32_t>> uniqueResolutions;
+
+
+		uint32_t modeCount = pIDirect3D9->GetAdapterModeCount(selectedAdapter, D3DFMT_X8R8G8B8);
+
+		for (uint32_t mode = 0; mode < modeCount; ++mode) {
+			D3DDISPLAYMODE displayMode;
+			HRESULT hr = pIDirect3D9->EnumAdapterModes(selectedAdapter, D3DFMT_X8R8G8B8, mode, &displayMode);
+
+			if (SUCCEEDED(hr)) {
+				std::pair<uint32_t, uint32_t> resolution = { displayMode.Width, displayMode.Height };
+				uniqueResolutions.insert(resolution);
+			}
+		}
+
+		AdapterModes.assign(uniqueResolutions.begin(), uniqueResolutions.end());
+
+		std::sort(AdapterModes.begin(), AdapterModes.end(),
+			[](const std::pair<uint32_t, uint32_t>& a, const std::pair<uint32_t, uint32_t>& b) {
+				if (a.first != b.first) return a.first < b.first;
+				return a.second < b.second;
+			});
+
+		Logger::TypedLog(CHN_MOD, "Found %d unique resolutions for adapter %d:\n",
+			(int)AdapterModes.size(), selectedAdapter);
+		for (const auto& res : AdapterModes) {
+			Logger::TypedLog(CHN_MOD, "  %dx%d\n", res.first, res.second);
+		}
+
+		patchByte((BYTE*)0x775F56, (uint8_t)AdapterModes.size());
+
+		static auto res_loop = safetyhook::create_mid(0x775F40, [](SafetyHookContext& ctx) {
+			auto& counter = ctx.eax;
+			auto& target_width = ctx.edx;
+			auto& target_height = ctx.ecx;
+			if (counter >= AdapterModes.size()) {
+				ctx.eip = 0x775F5B;
+				return;
+			}
+			UINT current_width = AdapterModes[counter].first;
+			UINT current_height = AdapterModes[counter].second;
+			if (current_width != target_width) {
+				ctx.eip = 0x775F52;
+				return;
+			}
+			if (current_height == target_height) {
+				ctx.eip = 0x775F5B;
+			}
+			else {
+				ctx.eip = 0x775F52;
+			}
+			});
+
+		static auto res_something = safetyhook::create_mid(0x77519E, [](SafetyHookContext& ctx) {
+			ctx.ecx = AdapterModes[ctx.eax].first;
+			ctx.edx = AdapterModes[ctx.eax].second;
+			ctx.eip = 0x7751AC;
+			});
+
+		return !AdapterModes.empty();
+	}
+	std::vector<std::pair<uint32_t, uint32_t>> getAvailableResolutions() {
+		return AdapterModes;
+	}
+
 	void render_batch_increase() {
-
-
 		patchDWord((void*)(0xC0BD0B + 1), Instance_pool_buffer_new_size);
 		patchDWord((void*)(0xC0BD13 + 1), (uintptr_t)&Instance_pool_buffer);
 
@@ -1231,6 +1321,10 @@ constexpr auto new_size_n = 5000;
 		OptionsManager::registerOption("Graphics", "ExtendedRenderDistance", (int*)&UseExtendedRenderBatch, 0);
 		patchJmp((void*)DynAddress(0x00D755F0), &AlphaMaskAvailable);
 		// ~ Shadows::Init(); // Don't know if this is needed, this gets called again at the end of init. (Uzis)
+
+		if (GameConfig::GetValue("Debug", "Hook_lua_load_dynamic_script_buffer", 1)) { // cuz rn this just patches in the resolutions, if init is expanded, please move this check inside
+			patchCall((void*)0xD1526E, init_directx9);
+		}
 
 		render_batch_increase();		
 

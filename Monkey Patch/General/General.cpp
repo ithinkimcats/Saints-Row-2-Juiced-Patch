@@ -23,6 +23,9 @@ and / or run completely on startup or after we check everything else.*/
 #include "..\Render\d3d9_hook.h"
 
 #include "../Render/bitmap.h"
+
+#include <regex>
+
 using namespace Math;
 #pragma warning( disable : 4409)
 namespace General {
@@ -658,6 +661,86 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 		}
 	}
 	SafetyHookMid luaLoadBuffHook;
+
+
+	bool PatchResolutionSlider(std::string& content) {
+		auto resolutions = Render3D::getAvailableResolutions();
+		if (resolutions.empty()) {
+			return false;
+		}
+
+		size_t searchPos = 0;
+		size_t startPos = std::string::npos;
+		size_t bracePos = std::string::npos;
+
+		while (searchPos < content.length()) {
+			size_t candidatePos = content.find("resolution_slider_values", searchPos);
+			if (candidatePos == std::string::npos) {
+				break;
+			}
+
+			size_t checkPos = candidatePos + 24;
+
+			while (checkPos < content.length() && (content[checkPos] == ' ' || content[checkPos] == '\t')) {
+				checkPos++;
+			}
+
+			if (checkPos < content.length() && content[checkPos] == '=') {
+				checkPos++;
+
+				while (checkPos < content.length() && (content[checkPos] == ' ' || content[checkPos] == '\t')) {
+					checkPos++;
+				}
+
+				if (checkPos < content.length() && content[checkPos] == '{') {
+					startPos = candidatePos;
+					bracePos = checkPos;
+					break;
+				}
+			}
+
+			searchPos = candidatePos + 1;
+		}
+
+		if (startPos == std::string::npos || bracePos == std::string::npos) {
+			return false;
+		}
+
+		size_t numValuesPos = content.find("num_values", bracePos);
+		if (numValuesPos == std::string::npos) {
+			return false;
+		}
+
+		size_t curValuePos = content.find("cur_value", numValuesPos);
+		if (curValuePos == std::string::npos) {
+			return false;
+		}
+
+		size_t endPos = content.find("}", curValuePos);
+		if (endPos == std::string::npos) {
+			return false;
+		}
+		endPos++;
+
+		std::string newSlider = "resolution_slider_values = {\n";
+
+		for (size_t i = 0; i < resolutions.size(); ++i) {
+			newSlider += "\t[" + std::to_string(i) + "] = { label = \""
+				+ std::to_string(resolutions[i].first) + "x"
+				+ std::to_string(resolutions[i].second) + "\" },\n";
+		}
+
+		newSlider += "\tnum_values = " + std::to_string(resolutions.size()) + ",\n";
+		newSlider += "\tcur_value = 0\n";
+		newSlider += "}";
+
+		content.replace(startPos, endPos - startPos, newSlider);
+
+		return true;
+	}
+
+
+
 	void VINT_DOC_luaLoadBuff(safetyhook::Context32& ctx) {
 		const char* buff = (const char*)ctx.ebp;
 		const char* filename = (const char*)(ctx.esp + 0x14);
@@ -682,21 +765,21 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 		std::string blankLib(sLibSuperUI.length(), ' ');
 
 		if (buff) {
-			for (int i = 0; i < 14; ++i) { // parses the hardcoded array to check if your current resolution exists in it
-				if (userResX == resX[i] && userResY == resY[i]) {
-					resFound = true;
-					break;
-				}
-			}
+			//for (int i = 0; i < 14; ++i) { // parses the hardcoded array to check if your current resolution exists in it
+			//	if (userResX == resX[i] && userResY == resY[i]) {
+			//		resFound = true;
+			//		break;
+			//	}
+			//}
 
-			if (!resFound) {
-				resX[13] = userResX;
-				resY[13] = userResY;
-			}
+			//if (!resFound) {
+			//	resX[13] = userResX;
+			//	resY[13] = userResY;
+			//}
 
 			replace_all(convertedBuff, searchAA, newAA);
 			replace_all(convertedBuff, "Fullscreen_Antialiasing", "MSAA                   "); // extra spaces for padding otherwise it'll break the buffer
-			replace_all(convertedBuff, "2048x1536", patchedRes); // easier to do it this way than to only patch if the user's res isn't found
+			//replace_all(convertedBuff, "2048x1536", patchedRes); // easier to do it this way than to only patch if the user's res isn't found
 			replace_all(convertedBuff, sLibSuperUI, blankLib); // fixes the error logger from SuperUI in system_lib.lua from crashing our executor, if nclok fixes it we'll get rid of this
 
 			if (*(BYTE*)(0xE8C470) == 0) { // only patch these if the game's running in English
@@ -715,11 +798,12 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 			const_cast<char*>(buff)[sz] = '\0';
 		}
 #endif
+		bool is_pause_menu = (strcmp(filename, "pause_menu.lua") == 0);
 		bool needBufferMod = Render2D::UltrawideFix
 #if !JLITE
 			|| Render2D::IVRadarScaling || allowJuicedAPI
 #endif
-			|| (strcmp(filename, "pause_menu.lua") == 0 && !InGameConfig::g_sliders.empty()) || (strcmp(filename, "hud.lua") == 0);
+			|| (is_pause_menu && !InGameConfig::g_sliders.empty()) || (strcmp(filename, "hud.lua") == 0);
 		{
 			// Clean up previous buffer if it exists (regardless of which file it was for)
 			if (needBufferMod) {
@@ -895,7 +979,16 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 
 				}
 #endif
+				if (is_pause_menu) {
+					if (!modified) {
+						finalContent = std::string(currentBuff, sz);
+					}
 
+
+					if (PatchResolutionSlider(finalContent)) {
+						modified = true;
+					}
+				}
 
 				if (strcmp(filename, "hud.lua") == 0) {
 					if (!modified) {
@@ -928,6 +1021,8 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 					}
 				}
 
+				if(is_pause_menu)
+					InGameConfig::DebugDumpLua(finalContent, "after");
 
 				// If any modifications were made, create a new buffer
 				if (modified) {
