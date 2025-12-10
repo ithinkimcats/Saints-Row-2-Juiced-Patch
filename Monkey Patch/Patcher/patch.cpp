@@ -1,9 +1,32 @@
 #include "patch.h"
 #include <stdint.h>
 #include <windows.h>
+#include <Zydis.h>
+
+void NopInstruction(void* address) {
+    ZydisDecoder decoder;
+    ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
+
+    ZydisDecodedInstruction instruction;
+    ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
+
+    if (ZYAN_SUCCESS(ZydisDecoderDecodeFull(&decoder, address, 15,
+        &instruction, operands))) {
+        DWORD oldProtect;
+        VirtualProtect(address, instruction.length, PAGE_EXECUTE_READWRITE, &oldProtect);
+        memset(address, 0x90, instruction.length);
+        VirtualProtect(address, instruction.length, oldProtect, &oldProtect);
+    }
+}
 
 void patchNop(void* addr, size_t size) {
-    DWORD oldProtect;
+
+    if (size == 0) {
+        NopInstruction(addr);
+        return;
+    }
+
+    DWORD oldProtect{};
 
     VirtualProtect(addr, size, PAGE_EXECUTE_READWRITE, &oldProtect);
     memset(addr, NOP, size);
