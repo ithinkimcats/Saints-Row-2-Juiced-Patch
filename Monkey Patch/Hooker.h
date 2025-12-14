@@ -36,7 +36,7 @@ __declspec(noinline) AT DynAddress(AT address)
     return address;
 }
 
-uintptr_t operator""_g(unsigned long long val)
+inline uintptr_t operator""_g(unsigned long long val)
 {
     return DynAddress(static_cast<uintptr_t>(val));
 }
