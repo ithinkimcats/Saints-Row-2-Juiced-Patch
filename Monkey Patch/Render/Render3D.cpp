@@ -155,18 +155,6 @@ namespace Render3D
 
 	}
 
-	void PatchHQTreeShadows() 
-	{
-		//10x resolution for TreeShadows
-		patchBytesM((BYTE*)0x0053833F, (BYTE*)"\x68\x00\x3C\x00\x00", 5);
-		patchBytesM((BYTE*)0x00538344, (BYTE*)"\x68\x00\x3C\x00\x00", 5);
-		patchBytesM((BYTE*)0x0051CE75, (BYTE*)"\x68\x00\x3C\x00\x00", 5);
-		patchBytesM((BYTE*)0x0051CE7A, (BYTE*)"\x68\x00\x3C\x00\x00", 5);
-		patchBytesM((BYTE*)0x00D1F8B2, (BYTE*)"\x68\x00\x3C\x00\x00", 5);
-		patchBytesM((BYTE*)0x00D1F8B7, (BYTE*)"\x68\x00\x3C\x00\x00", 5);
-		patchBytesM((BYTE*)0x0051FE40, (BYTE*)"\x68\x00\x3C\x00\x00", 5);
-		patchBytesM((BYTE*)0x0051FE45, (BYTE*)"\x68\x00\x3C\x00\x00", 5);
-	}
 	CMultiPatch CMPatches_PatchLowSleepHack = {
 
 		//[](CMultiPatch& mp) {
@@ -748,7 +736,7 @@ namespace Render3D
 		arr4[1] = (ShaderOptions.ShadowFilter) != 0 ? 0.0f : 1.0f;
 		arr4[2] = 0.f;
 		arr4[3] = 0.f;
-		float Res[4] = { (float)*General::GameResX, (float)*General::GameResY, GameConfig::GetValue("Graphics", "UHQTreeShadows", 0) ? 960 : 2048, 0.f};
+		float Res[4] = { (float)*General::GameResX, (float)*General::GameResY, 0.f, 0.f};
 		// distortion_juicedsettings for Gamma.
 		SetPSConstF(187, &arr4[0], 1);
 		SetPSConstF(188, &Res[0], 1);
@@ -1447,13 +1435,6 @@ constexpr auto new_size_n = 5000;
 		if (GameConfig::GetValue("Graphics", "DisableSkyRefl", 0))
 		{
 			Render3D::DisableSkyRefl();
-		}
-
-		// Beefs up Tree Shadows considerably
-		if (GameConfig::GetValue("Graphics", "UHQTreeShadows", 0))
-		{
-			Logger::TypedLog(CHN_SHADER, "Juicing up Tree Shadow Resolutions...\n");
-			Render3D::PatchHQTreeShadows();
 		}
 
 		if (GameConfig::GetValue("Graphics", "BetterAmbientOcclusion", 1))

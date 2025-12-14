@@ -15,7 +15,6 @@ namespace Render3D
     extern bool useFPSCam;
     extern bool VFXP_fixFog;
     extern void FPSCamHack();
-    void PatchHQTreeShadows();
     extern void HookSleep();
     extern void UnHookSleep();
     extern void patch_render_batch();

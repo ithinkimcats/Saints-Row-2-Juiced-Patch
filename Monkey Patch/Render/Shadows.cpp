@@ -9,6 +9,9 @@
 #include "../FileLogger.h"
 #include "../SafeWrite.h"
 #include "../GameConfig.h"
+#include "../Math/Math.h"
+#include "../Hooker.h"
+#include "../Patcher/patch.h"
 struct mempool;
 struct mempool_vt
 {
@@ -219,6 +222,20 @@ void ShutdownShadowWorkers()
 }
 
 namespace Shadows {
+
+    void PatchShadowMapRes(int Res)
+    {
+        Logger::TypedLog(CHN_DEBUG, "Setting the shadow map resolution to: %dx%d\n", Res, Res);
+        patchInt((void*)(0x0053833F + 1), Res);
+        patchInt((void*)(0x00538344 + 1), Res);
+        patchInt((void*)(0x0051CE75 + 1), Res);
+        patchInt((void*)(0x0051CE7A + 1), Res);
+        patchInt((void*)(0x00D1F8B2 + 1), Res);
+        patchInt((void*)(0x00D1F8B7 + 1), Res);
+        patchInt((void*)(0x0051FE40 + 1), Res);
+        patchInt((void*)(0x0051FE45 + 1), Res);
+    }
+
     void Init() {
         if (GameConfig::GetValue("Debug", "sync_shadows_threads", 1) || GameConfig::GetValue("Debug", "FixPerformance", 1) >= 2) {
             render_1 = (render_load*)*(uintptr_t*)(((0x0052434E + 2)));
@@ -230,6 +247,23 @@ namespace Shadows {
         }
         Logger::TypedLog(CHN_DEBUG, "Patching amount of Shadow job threads to be %d\n", std::clamp((int)GameConfig::GetValue("Debug", "ShadowThreadCount", 4), 1, (int)std::thread::hardware_concurrency()));
         SafeWrite32(0x528524, std::clamp((int)GameConfig::GetValue("Debug", "ShadowThreadCount", 4), 1, (int)std::thread::hardware_concurrency()));
+        static auto ShadowMapBBoxFix = safetyhook::create_mid(0x00536373_g, [](SafetyHookContext& ctx)
+            {
+                float* Min = (float*)ctx.edx;
+                float* Max = (float*)(ctx.edx + 12);
+
+                vector3 Camera = *(vector3*)0xE9D62C_g;
+                const float Radius = 265.f;
+
+                Min[0] = Camera.x - Radius;
+                Min[1] = Camera.y - Radius;
+                Min[2] = Camera.z - Radius;
+
+                Max[0] = Camera.x + Radius;
+                Max[1] = Camera.y + Radius;
+                Max[2] = Camera.z + Radius;
+            });
+        PatchShadowMapRes(std::clamp((int)GameConfig::GetValue("Graphics", "ShadowMapRes", 960), 960, 9600));
     }
 
     void Cleanup() {
