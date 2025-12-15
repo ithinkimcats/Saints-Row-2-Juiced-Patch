@@ -253,7 +253,7 @@ namespace Shadows {
                 float* Max = (float*)(ctx.edx + 12);
 
                 vector3 Camera = *(vector3*)0xE9D62C_g;
-                const float Radius = 265.f;
+                const float Radius = 800.f;
 
                 Min[0] = Camera.x - Radius;
                 Min[1] = Camera.y - Radius;
