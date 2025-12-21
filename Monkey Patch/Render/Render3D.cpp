@@ -724,11 +724,31 @@ namespace Render3D
 	shaderOptions ShaderOptions;
 	
 
+	struct RenderCMDBuffer
+	{
+		char* Buffer;
+		int   BufferSize;
+		char* ExecuteWritePos;
+		char* WritePos;
+		char* WritePosStart;
+		char* ReadPos;
+	};
+
+	RenderCMDBuffer& RenderBuffer = *(RenderCMDBuffer*)0x033D62EC;
+
 	void SetPSConstF(UINT reg, const float* data, UINT count = 1)
 	{
-		IDirect3DDevice9* pDevice = *reinterpret_cast<IDirect3DDevice9**>(reinterpret_cast<void*>(DynAddress(0x0252A2D0)));
-		if (pDevice)
-			pDevice->SetPixelShaderConstantF(reg, data, count);
+		if (reg < 0) return;
+
+		uint32_t* cmd = (uint32_t*)RenderBuffer.WritePos;
+
+		cmd[0] = 7;
+		cmd[1] = reg;
+		cmd[2] = count;
+
+		memcpy(&cmd[3], data, 16 * count);
+
+		RenderBuffer.WritePos += 12 + (16 * count);
 	}
 
 	void ChangeShaderOptions() {
