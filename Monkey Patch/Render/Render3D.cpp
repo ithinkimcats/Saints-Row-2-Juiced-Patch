@@ -1159,7 +1159,7 @@ constexpr auto new_size_n = 5000;
 		unsigned char AlphaMaskVal = *(unsigned char*)DynAddress(0x0252A2EC);
 
 		bool Result = MSAA && AlphaMaskVal;
-		float AlphaMask[4] = { Result, DitherFilter ? 1.0f : 0.0f, 0.0f, 0.0f };
+		float AlphaMask[4] = { Result, DitherFilter, 0.0f, 0.0f };
 		SetPSConstF(189, &AlphaMask[0], 1);
 		return false;
 	}
