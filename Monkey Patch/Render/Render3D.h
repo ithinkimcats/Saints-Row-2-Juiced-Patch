@@ -47,6 +47,7 @@ namespace Render3D
     extern void apply_old();
     extern bool push_back_force_old_size;
     extern float RenderDistance_old;
+    extern bool DitherFilter;
     extern void render_batch_increase();
     extern std::vector<std::pair<uint32_t, uint32_t>> getAvailableResolutions();
 

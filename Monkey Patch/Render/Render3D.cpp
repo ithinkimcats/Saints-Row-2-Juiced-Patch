@@ -46,6 +46,7 @@ namespace Render3D
 	double FOVMultiplier = 1;
 	double UltrawideFixRatio = 1;
 	const double fourbythreeAR = 1.333333373069763;
+	bool DitherFilter;
 
 	void AspectRatioFix(bool update_aspect_ratio) {
 		float currentAR = *(float*)0x022FD8EC;
@@ -1158,9 +1159,9 @@ constexpr auto new_size_n = 5000;
 		unsigned char AlphaMaskVal = *(unsigned char*)DynAddress(0x0252A2EC);
 
 		bool Result = MSAA && AlphaMaskVal;
-		float AlphaMask = Result;
-		SetPSConstF(189, &AlphaMask, 1);
-		return Result;
+		float AlphaMask[4] = { Result, DitherFilter ? 1.0f : 0.0f, 0.0f, 0.0f };
+		SetPSConstF(189, &AlphaMask[0], 1);
+		return false;
 	}
 
 	float RenderDistance_old;
@@ -1481,6 +1482,9 @@ constexpr auto new_size_n = 5000;
 		if (GameConfig::GetValue("Graphics", "FixGlares", 1)) {
 			patchByte((void*)0x004AFBA2, 0xEB);
 		}
+
+		DitherFilter = GameConfig::GetValue("Graphics", "DitherFiltering", 1);
+
 		Shadows::Init();
 	}
 }
