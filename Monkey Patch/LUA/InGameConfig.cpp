@@ -27,7 +27,6 @@ namespace InGameConfig {
     { "Debug", "DisableXInput",MenuType::CONTROLS },
     { "Debug", "ForceDisableVibration",MenuType::CONTROLS },
     { "Graphics", "UHQScreenEffects" },
-    { "Graphics", "UHQTreeShadows" },
     { "Graphics", "Borderless" },
 #if !JLITE
     { "Graphics", "RemoveVignette" },
