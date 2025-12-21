@@ -1292,6 +1292,7 @@ constexpr auto new_size_n = 5000;
 
 	int UseExtendedRenderBatch = 0;
 	void patch_render_batch() {
+		return;
 		if (UseExtendedRenderBatch == 0) {
 			*(float*)0xE996B4 = 1.0f;
 		}
@@ -1306,15 +1307,17 @@ constexpr auto new_size_n = 5000;
 
 	void Init()
 	{
-		OptionsManager::registerOption("Graphics", "ExtendedRenderDistance", (int*)&UseExtendedRenderBatch, 0);
+
+		*(float*)0xE996B4 = std::clamp((float)GameConfig::GetDoubleValue("Graphics","ExtendedRenderDistance",3.f),1.f,FLT_MAX);
+		
+		RenderDistance_old = *(float*)0xE996B4;
+		//OptionsManager::registerOption("Graphics", "ExtendedRenderDistance", (int*)&UseExtendedRenderBatch, 0);
 		patchJmp((void*)DynAddress(0x00D755F0), &AlphaMaskAvailable);
 		// ~ Shadows::Init(); // Don't know if this is needed, this gets called again at the end of init. (Uzis)
 
 		if (GameConfig::GetValue("Debug", "Hook_lua_load_dynamic_script_buffer", 1)) { // cuz rn this just patches in the resolutions, if init is expanded, please move this check inside
 			patchCall((void*)0xD1526E, init_directx9);
-		}
-
-		render_batch_increase();		
+		}	
 
 		if(GameConfig::GetValue("Graphics","RemovePixelationShader",0))
 		shaders_pc_hook();
