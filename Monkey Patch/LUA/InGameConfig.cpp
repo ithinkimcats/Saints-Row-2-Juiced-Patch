@@ -73,7 +73,7 @@ namespace InGameConfig {
         InGameConfig::RegisterBoolSlider("X360Gamma", "Xbox 360 Gamma");
         InGameConfig::RegisterBoolSlider("X360GammaUI", "Xbox 360 Gamma on UI");
         InGameConfig::RegisterBoolSlider("ShadowFiltering", "Shadow Filtering");
-        InGameConfig::RegisterBoolSlider("ExtendedRenderDistance", "Extended Render Distance");
+        //InGameConfig::RegisterBoolSlider("ExtendedRenderDistance", "Extended Render Distance");
         //InGameConfig::RegisterBoolSlider("DynamicRenderDistance", "DynamicRenderDistance");
         InGameConfig::RegisterBoolSlider("IncreaseVehicleFadeDistance", "Increase Vehicle Fade Distance");
         InGameConfig::RegisterSlider("ShaderOverride", "ShaderOverride", { "CONTROL_NO","Force Highest LOD","Increased distance" });
