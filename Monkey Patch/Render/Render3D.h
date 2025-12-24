@@ -36,7 +36,6 @@ namespace Render3D
     extern SafetyHookMid add_to_entry_test;
     extern void AspectRatioFix(bool update_aspect_ratio = false);
     extern shaderOptions ShaderOptions;
-    extern void ChangeShaderOptions();
     extern void VFXBrightnesstoggle();
 
     extern int OVERRIDE_SHADER_LOD;

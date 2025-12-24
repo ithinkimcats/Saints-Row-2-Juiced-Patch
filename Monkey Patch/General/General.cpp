@@ -1348,12 +1348,6 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 			mp.AddWriteRelCall(0x00C08493,(uintptr_t)TextureCrashFix);
 		},
 	};
-	SafetyHookInline D3D9CreateFunctionT{};
-	SAFETYHOOK_NOINLINE bool __cdecl CreateD3D9DeviceFunction(void* a1) {
-		bool result = D3D9CreateFunctionT.unsafe_ccall<bool>(a1);
-		Render3D::ChangeShaderOptions();
-		return result;
-	}
 
 	void LoadSaveSetPos(SafetyHookContext& ctx) {
 		vector3 QuickSavePos = *(vector3*)(ctx.eax + 0x38C40);
@@ -1418,7 +1412,6 @@ void __declspec(naked) TextureCrashFixRemasteredByGroveStreetGames()
 		SafeWrite8(0x00BFA6B6, 0xEB);
 		static SafetyHookMid LoadPosHook = safetyhook::create_mid(0x006938EB, &LoadSaveSetPos);
 		static SafetyHookMid SavePosHook = safetyhook::create_mid(0x00695BBF, &SaveCurrentPos);
-		D3D9CreateFunctionT = safetyhook::create_inline(0xD1F3F0, &CreateD3D9DeviceFunction);
 		WriteRelJump(0x007F46E4, (UInt32)&AddStrings); // add custom string loading - the game automatically appends the string so it will load the right string file based on your language, eg - juiced_us.le_strings
 #if !JLITE
 		WriteRelJump(0x00B91541, (UInt32)&AddVintLib); // allows us to add our own side lib for vint to add new global variables without messing up mod support

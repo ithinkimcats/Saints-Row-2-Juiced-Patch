@@ -301,8 +301,8 @@ namespace BlingMenuInstall
        BlingMenuAddFuncCustom("Juiced", "Better Ambient Occlusion", NULL, &BM_BetterAO, NULL);
        BlingMenuAddFuncCustom("Juiced", "Disable Cutscene black-bars", NULL, &BM_DisableCutSceneBlackBars, NULL);
        BlingMenuAddFuncCustom("Juiced", "Disable Fog", NULL, &BM_DisableFog, NULL);
-       BlingMenuAddBool("Juiced", "X360Gamma", (bool*)&Render3D::ShaderOptions.X360Gamma, &Render3D::ChangeShaderOptions);
-       BlingMenuAddBool("Juiced", "ShadowFiltering", (bool*)&Render3D::ShaderOptions.ShadowFilter, &Render3D::ChangeShaderOptions);
+       BlingMenuAddBool("Juiced", "X360Gamma", (bool*)&Render3D::ShaderOptions.X360Gamma, NULL);
+       BlingMenuAddBool("Juiced", "ShadowFiltering", (bool*)&Render3D::ShaderOptions.ShadowFilter, NULL);
        BlingMenuAddFuncCustom("Juiced", "X360GammaUI", NULL, &BM_UI_hook, NULL);
        BlingMenuAddDouble("Juiced", "FOV Multiplier", &Render3D::FOVMultiplier, []() {
            Render3D::AspectRatioFix();
