@@ -1312,28 +1312,30 @@ constexpr auto new_size_n = 5000;
 		
 	}
 
+	float ExtendedRenderDistance = 1.f;
 	int UseExtendedRenderBatch = 0;
 	void patch_render_batch() {
-		return;
-		if (UseExtendedRenderBatch == 0) {
-			*(float*)0xE996B4 = 1.0f;
-		}
-		if (UseExtendedRenderBatch == 1) {
-			*(float*)0xE996B4 = 3.0f;
-		}
-		RenderDistance_old = *(float*)0xE996B4;
+		static int last_mode = -1;
+		if (UseExtendedRenderBatch != last_mode || UseExtendedRenderBatch == 1) {
+			if (UseExtendedRenderBatch == 0) {
+				*(float*)0xE996B4 = 1.0f;
+			}
+			else if (UseExtendedRenderBatch == 1) {
+				*(float*)0xE996B4 = ExtendedRenderDistance;
+			}
 
-		//if (RenderDistance_old > 1.f)
-		//render_batch_increase();
+			RenderDistance_old = *(float*)0xE996B4;
+			last_mode = UseExtendedRenderBatch;
+		}
 	}
 
 	void Init()
 	{
 
-		*(float*)0xE996B4 = std::clamp((float)GameConfig::GetDoubleValue("Graphics","ExtendedRenderDistance",3.f),1.f,FLT_MAX);
+		ExtendedRenderDistance = std::clamp((float)GameConfig::GetDoubleValue("Graphics","ExtendedRenderDistance",3.f),1.f,FLT_MAX);
 		
 		RenderDistance_old = *(float*)0xE996B4;
-		//OptionsManager::registerOption("Graphics", "ExtendedRenderDistance", (int*)&UseExtendedRenderBatch, 0);
+		OptionsManager::registerOption("Graphics", "ToggleExtendedRenderDistance", (int*)&UseExtendedRenderBatch, 0);
 		patchJmp((void*)DynAddress(0x00D755F0), &AlphaMaskAvailable);
 		// ~ Shadows::Init(); // Don't know if this is needed, this gets called again at the end of init. (Uzis)
 
