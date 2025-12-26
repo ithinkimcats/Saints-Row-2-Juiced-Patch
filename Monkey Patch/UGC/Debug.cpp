@@ -121,9 +121,19 @@ namespace Debug
 	}
 
 	int __cdecl printf_mempool_hook(const char* const Format, ...) {
+		static bool ignore_session = false;
+
 		va_list args;
 		va_list args_copy;
 		int result = 0;
+
+		if (ignore_session) {
+			va_start(args, Format);
+			result = vprintf(Format, args);
+			va_end(args);
+			return result;
+		}
+
 		va_start(args, Format);
 		va_copy(args_copy, args);
 		int size = vsnprintf(NULL, 0, Format, args) + 1;
@@ -131,12 +141,9 @@ namespace Debug
 		if (size > 0) {
 			char* buffer = (char*)malloc(size);
 			if (buffer) {
-
 				vsnprintf(buffer, size, Format, args_copy);
-
 				const char* extra_prefix = "[MEMPOOL ERROR]\n";
-				const char* extra_suffix = "\nMost likely caused by an installed mod, please attempt to increase original mempool size, expect issues otherwise.";
-
+				const char* extra_suffix = "\n\nMost likely caused by an installed mod, please attempt to increase original mempool size, expect issues otherwise.\n\nIgnore future errors this session?";
 				int extended_size = strlen(extra_prefix) + strlen(buffer) + strlen(extra_suffix) + 1;
 				char* extended_buffer = (char*)malloc(extended_size);
 
@@ -144,19 +151,19 @@ namespace Debug
 					snprintf(extended_buffer, extended_size, "%s%s%s",
 						extra_prefix, buffer, extra_suffix);
 
+					int response = MessageBoxA(NULL, extended_buffer, "Juiced Patch", MB_YESNO | MB_ICONERROR);
 
-					MessageBoxA(NULL, extended_buffer, "Juiced Patch", MB_OK | MB_ICONERROR);
+					if (response == IDYES) {
+						ignore_session = true;
+					}
 
 					free(extended_buffer);
 				}
 				else {
-
 					MessageBoxA(NULL, buffer, "Juiced Patch", MB_OK | MB_ICONERROR);
 				}
 
-
 				result = printf("%s", buffer);
-
 				free(buffer);
 			}
 		}
@@ -206,7 +213,7 @@ namespace Debug
 			fixFrametime = 1;
 		}
 
-		if (GameConfig::GetValue("Debug", "mempool_print_error", 1) != 0) {
+		if (GameConfig::GetValue("Mempool", "mempool_print_error", 1) != 0) {
 			patchCall((void*)0xBFCA9E, printf_mempool_hook);
 			patchCall((void*)0xBFCB5F, printf_mempool_hook);
 			patchCall((void*)0xBFCBBE, printf_mempool_hook);

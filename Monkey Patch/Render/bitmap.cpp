@@ -247,6 +247,10 @@ constexpr size_t permanent_default = 0x00800000;
 
             size_t second_increase_BitMap_Image_names = std::clamp(GameConfig::GetValue("Mempool", "Bitmap_Image_Names", (size_t)second_increase), (size_t)49152, GB);
 
+            Logger::TypedLog("Mempool", "Patched permanent to %d\n", new_permanent_size);
+            Logger::TypedLog("Mempool", "Patched Bitmap_Image_Names_hashtable to %d\n", first_increase_hastable);
+            Logger::TypedLog("Mempool", "Patched Bitmap_Image_Names to %d\n", second_increase_BitMap_Image_names);
+
             SafeWrite32((0x51DCB4 + 1), new_permanent_size);
             SafeWrite32((0x51DDC8 + 1), new_permanent_size);
             // Increase size for bitmap string hash table

@@ -5,6 +5,7 @@
 #include "../FileLogger.h"
 #include "../Patcher/patch.h"
 #include "../GameConfig.h"
+#include <algorithm>
 
 namespace Memory
 {
@@ -18,14 +19,6 @@ namespace Memory
 		patchBytesM((BYTE*)0x00835879, (BYTE*)"\x6A\x02", 2); // client
 		patchBytesM((BYTE*)0x00833A52, (BYTE*)"\x6A\x02", 2); // host
 		patchBytesM((BYTE*)0x0082FD84, (BYTE*)"\x83\xC3\x08", 3); // Limit Gangsta Brawl/TGB player cap to 8 from 12.
-	}
-
-	void ExpandGeneralPools()
-	{
-		Logger::TypedLog(CHN_DEBUG, "Expanding Memory Pools.\n");
-		patchBytesM((BYTE*)0x0051DED7, (BYTE*)"\x68\x00\x00\x15\x00", 5); // perm mesh cpu
-		patchBytesM((BYTE*)0x0051DF0F, (BYTE*)"\xB8\x00\x00\x15\x00", 5); // perm mesh cpu
-		Logger::TypedLog(CHN_DEBUG, "Expanded perm mesh cpu to 1376256\n");
 	}
 
 	void ExpandTreeDist()
@@ -177,10 +170,14 @@ namespace Memory
 		}
 #endif
 #if !JLITE
-		if (GameConfig::GetValue("Debug", "ExpandMemoryPools", 0))
-		{
-			ExpandGeneralPools();
-		}
+
+			int perm_mesh_cpu_new_size = std::clamp((int)GameConfig::GetValue("Mempool", "perm_mesh_cpu", 1671168), 1114112,INT32_MAX);
+
+			patchInt((void*)(0x0051DED7 + 1), perm_mesh_cpu_new_size);
+			patchInt((void*)(0x0051DF0F + 1), perm_mesh_cpu_new_size);
+
+			Logger::TypedLog(CHN_DEBUG, "Expanded perm mesh cpu to %d\n", perm_mesh_cpu_new_size);
+		
 
 		//if (GameConfig::GetValue("Graphics", "ExtendedTreeFadeDistance", 0))
 		//{
