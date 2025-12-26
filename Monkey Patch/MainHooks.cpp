@@ -760,8 +760,6 @@ void cus_FrameToggles() {
 	static bool DetachCam = false;
 	static bool FPSCounter = false;
 	static uint8_t ogAA;
-	static bool CutscenePaused;
-
 
 	if (IsKeyPressed(VK_F1, false)) { // F1
 
@@ -839,11 +837,6 @@ void cus_FrameToggles() {
 		Logger::TypedLog(CHN_DEBUG, "-FOV Multiplier: %f,\n", Render3D::FOVMultiplier);
 		GameConfig::SetDoubleValue("Gameplay", "FOVMultiplier", Render3D::FOVMultiplier);
 
-	}
-	bool select_just_pressed = *(bool*)(0x2347BA4);
-	if (select_just_pressed && *InCutscene && !isCoop()) {
-		CutscenePaused = !CutscenePaused;
-		CutscenePaused ? ShowPauseDialog(true, false, false, false) : RemovePauseDialog();
 	}
 
 	if (IsKeyPressed(VK_F5, false)) { // F5
@@ -1291,6 +1284,13 @@ int RenderLoopStuff_Hacked()
 			cus_FrameToggles();
 			Slew();
 		}
+		static bool CutscenePaused;
+		bool select_just_pressed = *(bool*)(0x2347BA4);
+		if (select_just_pressed && *InCutscene && !isCoop()) {
+			CutscenePaused = !CutscenePaused;
+			CutscenePaused ? ShowPauseDialog(true, false, false, false) : RemovePauseDialog();
+		}
+
     #if !RELOADED
 		LuaExecutor();
 		Noclip();
