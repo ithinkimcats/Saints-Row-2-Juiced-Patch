@@ -171,7 +171,7 @@ namespace Memory
 #endif
 #if !JLITE
 
-			int perm_mesh_cpu_new_size = std::clamp((int)GameConfig::GetValue("Mempool", "perm_mesh_cpu", 1671168), 1114112,INT32_MAX);
+			int perm_mesh_cpu_new_size = std::clamp((int)GameConfig::GetValue("Mempool", "perm_mesh_cpu", 1114112  * 2), 1114112,INT32_MAX);
 
 			patchInt((void*)(0x0051DED7 + 1), perm_mesh_cpu_new_size);
 			patchInt((void*)(0x0051DF0F + 1), perm_mesh_cpu_new_size);
