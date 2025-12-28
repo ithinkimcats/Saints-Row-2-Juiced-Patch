@@ -75,7 +75,9 @@ namespace InGameConfig {
         //InGameConfig::RegisterBoolSlider("ExtendedRenderDistance", "Extended Render Distance");
         //InGameConfig::RegisterBoolSlider("DynamicRenderDistance", "DynamicRenderDistance");
         InGameConfig::RegisterBoolSlider("IncreaseVehicleFadeDistance", "Increase Vehicle Fade Distance");
-        InGameConfig::RegisterBoolSlider("ToggleExtendedRenderDistance", "Toggle ExtendedRenderDistance");
+        if (GameConfig::GetValue("Graphics", "ExtendRenderBatches",0)) {
+            InGameConfig::RegisterBoolSlider("ToggleExtendedRenderDistance", "Toggle ExtendedRenderDistance");
+        }
         InGameConfig::RegisterSlider("ShaderOverride", "ShaderOverride", { "CONTROL_NO","Force Highest LOD","Increased distance" });
 #if !JLITE
         InGameConfig::RegisterBoolSlider("VFXPlus", "VanillaFXPlus");
