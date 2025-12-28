@@ -1292,6 +1292,15 @@ constexpr auto new_size_n = 5000;
 	}
 
 	void render_batch_increase() {
+		GameConfig::Initialize();
+		Logger::Initialize();
+
+		auto value = GameConfig::GetValue("Graphics", "ExtendRenderBatches", 1);
+
+		if (!value) {
+			return;
+		}
+			
 		patchDWord((void*)(0xC0BD0B + 1), Instance_pool_buffer_new_size);
 		patchDWord((void*)(0xC0BD13 + 1), (uintptr_t)&Instance_pool_buffer);
 
@@ -1335,6 +1344,7 @@ constexpr auto new_size_n = 5000;
 		ExtendedRenderDistance = std::clamp((float)GameConfig::GetDoubleValue("Graphics","ExtendedRenderDistance",3.f),1.f,FLT_MAX);
 		
 		RenderDistance_old = *(float*)0xE996B4;
+		if(GameConfig::GetValue("Graphics", "ExtendRenderBatches", 1) != 0)
 		OptionsManager::registerOption("Graphics", "ToggleExtendedRenderDistance", (int*)&UseExtendedRenderBatch, 0);
 		patchJmp((void*)DynAddress(0x00D755F0), &AlphaMaskAvailable);
 		// ~ Shadows::Init(); // Don't know if this is needed, this gets called again at the end of init. (Uzis)
