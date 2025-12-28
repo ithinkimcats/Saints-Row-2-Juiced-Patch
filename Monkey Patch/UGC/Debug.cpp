@@ -150,7 +150,7 @@ namespace Debug
 			char* buffer = (char*)malloc(size);
 			if (buffer) {
 				vsnprintf(buffer, size, Format, args_copy);
-				const char* extra_prefix = "[MEMPOOL ERROR]\n";
+				const char* extra_prefix = "[MEMPOOL ERROR/WARNING]\n";
 				const char* extra_suffix = "Most likely caused by an installed mod, please attempt to increase original mempool size, expect issues otherwise.\n\nIgnore future errors this session?";
 
 				std::string auto_update_string = "\n";
