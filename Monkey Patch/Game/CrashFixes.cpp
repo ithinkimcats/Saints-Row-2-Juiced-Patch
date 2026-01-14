@@ -56,7 +56,7 @@ namespace CrashFixes {
 		}
 	}
 	SAFETYHOOK_NOINLINE void Fix_0x0055B681_crash(SafetyHookContext& ctx) {
-		if (!*(DWORD*)ctx.eax || !ctx.eax)
+		if (!ctx.eax)
 			ctx.eip = 0x0055B68D;
 	}
 	SAFETYHOOK_NOINLINE void Fix_0x007B1D7E_crash_weaponstore(SafetyHookContext& ctx) {
