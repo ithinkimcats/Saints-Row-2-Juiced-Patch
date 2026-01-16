@@ -6,7 +6,7 @@ Fixes marked with ⚙️ can be configured/toggled via the INI file / BlingMenu
 
 ## Critical fixes
 
-* ⚙️ FPS boost by at least 2x[^1] via SleepHack (3 options via **SleepHack**)
+* ⚙️ FPS boost by at least 2x[^1] via FixPerformance
 * ⚙️ Fix Havok Frametime which casued objects,cutscenes,camera math and more to be incorrect/desync.
 * ⚙️ Use modern math functions which in turn makes cutscenes and any scenes with water faster via FastMath, boosts FPS by at most 2x[^1] in such scenes
 * ⚙️ Correct Gamma to be more inline with the Xbox 360 version.
@@ -17,7 +17,7 @@ Fixes marked with ⚙️ can be configured/toggled via the INI file / BlingMenu
 * Fix semi-common texture crash.
 * Fix water being black in the distance.
 * Allow users to select current resolution from in-game options.
-[^1]: Sleephack effects are greatly enhanced with the usage of [DXVK](https://github.com/doitsujin/dxvk).
+[^1]: FixPerformance effects are greatly enhanced with the usage of [DXVK](https://github.com/doitsujin/dxvk).
 ## Other fixes
 * Motion blur math scales with framerate.
 * Fix sunflare disappearing upon a save.
@@ -35,7 +35,8 @@ Fixes marked with ⚙️ can be configured/toggled via the INI file / BlingMenu
 * Allow loading of loose files (VPP content) with folders to load from taken from loose.txt (default mods folder)
 * ⚙️ addon_bitmaps - allows for custom textures support, meaning you can load new texture entries with new names.
 * ⚙️ Ported over 30 animations from the console versions.
-* ⚙️ Implemented Dynamic controller prompts
+* ⚙️ Implemented SDL3 controller support.
+* ⚙️ Implemented Dynamic controller prompts, for Xbox 360,PS3,DualSense,XSX and more.
 * ⚙️ Restore Slew Mode, toggleable via F4 or BlingMenu
 * ⚙️ Lua executor with some custom commands.
 * ⚙️ <kbd>F</kbd> Now serve several useful and helpful functions such as HUD toggle, Slew, FOV & more.
