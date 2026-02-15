@@ -412,8 +412,7 @@ int processtextwidth(int width) {
 
 	void SetupBetterWindowed()
 	{
-		int l_IsBetterWindowed = GameConfig::GetValue("Graphics", "BetterWindowed", 0);
-		uint32_t windowed_style = l_IsBetterWindowed ? (WS_CAPTION | WS_OVERLAPPED | WS_SYSMENU | WS_DLGFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SIZEBOX) : (WS_DLGFRAME);
+		uint32_t windowed_style = (WS_CAPTION | WS_OVERLAPPED | WS_SYSMENU | WS_DLGFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SIZEBOX);
 		patchDWord((void*)(0x00BFA35A + 4), windowed_style);
 	}
 
