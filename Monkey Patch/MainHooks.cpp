@@ -262,7 +262,7 @@ BOOL __stdcall Hook_GetVersionExA(LPOSVERSIONINFOA lpVersionInformation)
 
 			// The game timer constructor sets up the game's timing so this needs to patch before the constructor is called.
 			PatchQueryPerformance();
-			Render3D::render_batch_increase();
+			//Render3D::render_batch_increase();
 		}
 		else
 		{
