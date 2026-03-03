@@ -8,6 +8,7 @@
 #include "../Player/Input.h"
 #include "../UGC/Debug.h"
 #include "../UtilsGlobal.h"
+#include "../General/General.h"
 #pragma warning( disable : 4806)
 #pragma warning( disable : 28159)
 namespace Game
@@ -469,6 +470,11 @@ namespace Game
 
 		using namespace Physical;
 		motorcycle_should_eject_passengers_MIDASMHOOK = safetyhook::create_mid(0x00AB599F, &motorcycle_should_eject_passengers_asmhook);
+		
+		// they did this in one of the patches, probably 3, and it fixes vehicles with ProhibitedGunfireSeats flags that have weapons/turrets not being shootable by NPCs (eg. bear & edf scout)
+		static auto VehicleWeaponsTU3 = safetyhook::create_mid(0x00438B6C, [](SafetyHookContext& ctx) {
+			if (General::GetNPCWeaponType(ctx.edi) == 22) ctx.eip = 0x438BCB;
+			});
 	}
 	namespace HUD
 	{

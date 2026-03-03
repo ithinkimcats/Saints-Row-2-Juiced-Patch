@@ -218,6 +218,22 @@ namespace General {
 	typedef void __cdecl HudControlT(bool Hide);
 	HudControlT* HudControl = (HudControlT*)(0x793D60);
 
+	int __declspec(naked) GetNPCWeaponType(int NPCPointer) {
+		__asm {
+			push ebp
+			mov ebp, esp
+			sub esp, __LOCAL_SIZE
+
+			mov edx, NPCPointer
+			mov ecx, 0x96B1E0
+			call ecx
+
+			mov esp, ebp
+			pop ebp
+			ret
+		}
+	}
+
 	bool isCoop() {
 		return ((bool(*)())0x007F7AD0)();
 	}
