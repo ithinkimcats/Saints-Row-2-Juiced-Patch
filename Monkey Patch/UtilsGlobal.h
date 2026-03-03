@@ -83,8 +83,8 @@ inline const char* juicedversion = "1.5.1";
 inline const char* juicedversion = "8.0.3";
 #endif
 
-inline const char* thaRowmenuversion = "0.0.1";
-inline const char* thaRowversion = "%s - thaRow 0.1beta";
+inline const char* thaRowmenuversion = "0.0.2";
+inline const char* thaRowversion = "%s - thaRow 0.2beta";
 
 inline std::string mynat_type;
 
