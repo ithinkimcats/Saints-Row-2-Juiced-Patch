@@ -85,6 +85,8 @@ namespace Input {
 		if (g_gamepad)
 			return sdlToControllerType(SDL_GetGamepadType(g_gamepad));
 
+
+		return forced_current_controller_type;
 	}
 
 	bool UsePS3Prompts() {
