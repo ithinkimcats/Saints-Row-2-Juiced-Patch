@@ -930,10 +930,14 @@ namespace Input {
 		return SDL_Init(SDL_INIT_GAMEPAD);
 
 	}
+	HRESULT input_pc_init_hook() {
+		input_pc_init_sdl();
 
+		return ((HRESULT(__cdecl*)())0xC13910)();
+	}
 	void Init() {
 		if (GameConfig::GetValue("Input", "SDL", 1) != 0) {
-			input_pc_init_sdl();
+			patchCall((void*)0x51F47C, input_pc_init_hook);
 			patchJmp((void*)0xC13C80, &input_pc_poll_sdl);
 		}
 		patch_zoom_aware_interior_pause_map();
